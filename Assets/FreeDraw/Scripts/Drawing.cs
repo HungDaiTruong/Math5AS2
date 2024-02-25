@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -14,7 +15,7 @@ public class Drawing : MonoBehaviour
     private bool isDragging = false;
     private Vector3 offset;
 
-    public static Color Pen_Colour = Color.black;
+    public static Color Pen_Colour = Color.blue;
 
     public LayerMask Drawing_Layers;
 
@@ -57,13 +58,28 @@ public class Drawing : MonoBehaviour
     }
 
     // Function to mark a pixel for color change
-    void MarkPixelToChange(int x, int y, Color color)
+    public void MarkPixelToChange(int x, int y, Color color)
     {
-        int array_pos = y * (int)drawable_sprite.rect.width + x;
-        if (array_pos > cur_colors.Length || array_pos < 0)
+        if (!TryGetArrayPos(x,y,out int array_pos))
             return;
-
         cur_colors[array_pos] = color;
+    }
+
+    private bool  TryGetArrayPos(int x, int y,out int p)
+    {
+        if(y<0 || y>= (int)drawable_sprite.rect.height || x<0 || x>= (int)drawable_sprite.rect.width)
+        {
+            p = -1;
+            return false;
+        }
+        p = y * (int)drawable_sprite.rect.width + x;
+        return true;
+    }
+    public Color32? GetCurColor(int x, int y)
+    {
+        if (!TryGetArrayPos(x, y, out int array_pos))
+            return null;
+        return cur_colors[array_pos];
     }
 
     // Function to draw a line between two points
@@ -93,7 +109,7 @@ public class Drawing : MonoBehaviour
     }
 
     // Function to apply marked pixel changes to the texture
-    void ApplyMarkedPixelChanges()
+    public void ApplyMarkedPixelChanges()
     {
         drawable_texture.SetPixels32(cur_colors);
         drawable_texture.Apply();
