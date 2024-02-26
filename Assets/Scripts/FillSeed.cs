@@ -4,31 +4,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FillSeed : MonoBehaviour
+public class FillSeed : FillAlgoBase
 {
-    [SerializeField] Drawing _drawer;
-    [SerializeField] Button _button;
-    [SerializeField, Range(-1f, 1f)] private float _ticks;
-    [SerializeField, Range(1, 1000000)] private int _batches = 10000;
-    [SerializeField, Range(1, 1000000)] private int _displayBatches = 10000;
-    [SerializeField]
-    private Color32 fill;
     [SerializeField] private bool _rec;
-    Color32 border;
-    private void Awake()
+
+    protected override void Fill(int xI, int yI)
     {
-        _button.onClick.AddListener(FillRandom);
-    }
-    public void FillRandom()
-    {
-        fill = new Color32((byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256));
-        fill = Color.green;
-        //Fill(Random.Range(0, xMax), Random.Range(0, yMax));
-        Fill(0, 0);
-    }
-    void Fill(int xI, int yI)
-    {
-        border = Drawing.Pen_Colour;
         if (_rec)
         {
             Fill4Rec(xI, yI);
@@ -36,7 +17,6 @@ public class FillSeed : MonoBehaviour
         }
         else
             StartCoroutine(Fill4(xI, yI));
-
     }
 
     void Fill4Rec(int x, int y)
@@ -51,7 +31,8 @@ public class FillSeed : MonoBehaviour
         Fill4Rec(x - 1, y);
         Fill4Rec(x, y - 1);
     }
-    IEnumerator Fill4(int xI, int yI)
+
+    protected IEnumerator Fill4(int xI, int yI)
     {
         Stack<(int x, int y)> stack = new();
         stack.Push((xI, yI));
