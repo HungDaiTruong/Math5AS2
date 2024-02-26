@@ -81,6 +81,14 @@ public class Drawing : MonoBehaviour
             return null;
         return cur_colors[array_pos];
     }
+    public bool TryGetCurColor(int x, int y, out Color32 color)
+    {
+        var c = GetCurColor(x, y);
+        color = c.GetValueOrDefault();
+        if (!c.HasValue)
+            return false;
+        return true;
+    }
 
     // Function to draw a line between two points
     void DrawLine(Vector2 start, Vector2 end)
