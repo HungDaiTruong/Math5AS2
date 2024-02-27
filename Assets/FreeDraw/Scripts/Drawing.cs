@@ -11,8 +11,8 @@ public class Drawing : MonoBehaviour
     public List<Vector2> polygonVertices = new List<Vector2>();
     
     public Camera mainCamera;
-    public float maxZoom = 5f; 
-    public float minZoom = 1f; 
+    public float maxZoom = 5f;
+    public float minZoom = 1f;
     public float zoomSpeed = 1f;
     public Transform textureTransform;
     private bool isDragging = false;
@@ -63,14 +63,14 @@ public class Drawing : MonoBehaviour
     // Function to mark a pixel for color change
     public void MarkPixelToChange(int x, int y, Color color)
     {
-        if (!TryGetArrayPos(x,y,out int array_pos))
+        if (!TryGetArrayPos(x, y, out int array_pos))
             return;
         cur_colors[array_pos] = color;
     }
 
-    private bool  TryGetArrayPos(int x, int y,out int p)
+    private bool TryGetArrayPos(int x, int y, out int p)
     {
-        if(y<0 || y>= (int)drawable_sprite.rect.height || x<0 || x>= (int)drawable_sprite.rect.width)
+        if (y < 0 || y >= (int)drawable_sprite.rect.height || x < 0 || x >= (int)drawable_sprite.rect.width)
         {
             p = -1;
             return false;
@@ -83,6 +83,14 @@ public class Drawing : MonoBehaviour
         if (!TryGetArrayPos(x, y, out int array_pos))
             return null;
         return cur_colors[array_pos];
+    }
+    public bool TryGetCurColor(int x, int y, out Color32 color)
+    {
+        var c = GetCurColor(x, y);
+        color = c.GetValueOrDefault();
+        if (!c.HasValue)
+            return false;
+        return true;
     }
 
     // Function to draw a line between two points
