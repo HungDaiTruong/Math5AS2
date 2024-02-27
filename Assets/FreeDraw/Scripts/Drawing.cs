@@ -39,25 +39,30 @@ public class Drawing : MonoBehaviour
     // Method to set pen brush color to red
     public void SetPenBrushRed()
     {
-        Pen_Colour = Color.red;
+        Pen_Colour = red;
     }
 
     // Method to set pen brush color to blue
     public void SetPenBrushBlue()
     {
-        Pen_Colour = Color.blue;
+        Pen_Colour = blue;
     }
 
     // Method to set pen brush color to green
     public void SetPenBrushGreen()
     {
-        Pen_Colour = Color.green;
+        Pen_Colour = green;
     }
 
+    private Color red = Color.red;
+    private Color blue = Color.blue;
+    private Color green = Color.green;
+    private Color white = Color.white;
+    public Color[] penColors => new Color[] { red, green, blue, white };
     // Method to set pen brush color to black
-    public void SetPenBrushBlack()
+    public void SetPenBrushWhite()
     {
-        Pen_Colour = Color.black;
+        Pen_Colour = white;
     }
 
     // Function to mark a pixel for color change
