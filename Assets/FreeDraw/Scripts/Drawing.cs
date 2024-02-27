@@ -7,6 +7,9 @@ using UnityEngine.EventSystems;
 
 public class Drawing : MonoBehaviour
 {
+
+    public List<Vector2> polygonVertices = new List<Vector2>();
+    
     public Camera mainCamera;
     public float maxZoom = 5f; 
     public float minZoom = 1f; 
@@ -85,6 +88,11 @@ public class Drawing : MonoBehaviour
     // Function to draw a line between two points
     void DrawLine(Vector2 start, Vector2 end)
     {
+        if (!is_drawing_line)
+        {
+            polygonVertices.Add(start);
+        }
+        
         cur_colors = drawable_texture.GetPixels32();
         Vector2Int start_pixel = WorldToPixelCoordinates(start);
         Vector2Int end_pixel = WorldToPixelCoordinates(end);
@@ -102,10 +110,14 @@ public class Drawing : MonoBehaviour
             MarkPixelToChange(pixel.x, pixel.y, Pen_Colour);
         }
 
+        // Ajoute toujours le point final
+        polygonVertices.Add(end);
+
         ApplyMarkedPixelChanges();
 
         // Set the last point as the first point for the next line
         start_point = end;
+        is_drawing_line = true;
     }
 
     // Function to apply marked pixel changes to the texture
