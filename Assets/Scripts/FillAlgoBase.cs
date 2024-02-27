@@ -1,37 +1,28 @@
 ﻿using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class FillAlgoBase : MonoBehaviour
+public abstract class FillAlgoBase : DrawingRelatedAlgo
 {
-    [SerializeField] protected Drawing _drawer;
-    [SerializeField] Button _button;
     [SerializeField, Range(-1f, 1f)] protected float _ticks;
     [SerializeField, Range(1, 1000000)] protected int _batches = 10000;
     [SerializeField, Range(1, 1000000)] protected int _displayBatches = 10000;
-    protected Color32 border;
+    protected Color32[] border;
     [SerializeField]
     protected Color32 fill;
-    public void FillRandom()
+    public override void Operate()
     {
         fill = new Color32((byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256));
         fill = Color.green;
         //Fill(Random.Range(0, xMax), Random.Range(0, yMax));
-        border = Drawing.Pen_Colour;
-        Fill(0, 0);
-    }
-    private void Awake()
-    {
-        _button.onClick.AddListener(FillRandom);
+        border = _drawer.penColors.Select<Color, Color32>(c => c).Append(_additionnalDrawingColor).ToArray();
+        Fill(_drawer.W/2, _drawer.H/2);
     }
 
     protected abstract void Fill(int xI, int yI);
     protected bool PixelBorderOrOut(int x, int y, out Color32 found)
     {
         return PixelColorOrOut(x, y, border, out found);
-    }
-    protected bool PixelColorOrOut(int x, int y, Color32 color, out Color32 found)
-    {
-        return !_drawer.TryGetCurColor(x, y, out found) || found.Equals(color);
     }
 }
