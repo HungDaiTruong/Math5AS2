@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,8 @@ public class Drawing : MonoBehaviour
 {
 
     public List<Vector2> polygonVertices = new List<Vector2>();
-    
+    public List<Vector2Int> lastPolygonPixelVertices = new List<Vector2Int>();
+
     public Camera mainCamera;
     public float maxZoom = 5f;
     public float minZoom = 1f;
@@ -103,15 +105,30 @@ public class Drawing : MonoBehaviour
     // Function to draw a line between two points
     void DrawLine(Vector2 start, Vector2 end)
     {
+
+        cur_colors = drawable_texture.GetPixels32();
+        Vector2Int start_pixel = WorldToPixelCoordinates(start);
         if (!is_drawing_line)
         {
             polygonVertices.Add(start);
+            lastPolygonPixelVertices.Add(start_pixel);
         }
-        
-        cur_colors = drawable_texture.GetPixels32();
-        Vector2Int start_pixel = WorldToPixelCoordinates(start);
         Vector2Int end_pixel = WorldToPixelCoordinates(end);
 
+        DrawLineSimple(start_pixel, end_pixel);
+
+        // Ajoute toujours le point final
+        polygonVertices.Add(end);
+        lastPolygonPixelVertices.Add(end_pixel);
+
+        ApplyMarkedPixelChanges();
+
+        // Set the last point as the first point for the next line
+        start_point = end;
+        is_drawing_line = true;
+    }
+    public void DrawLineSimple(Vector2Int start_pixel, Vector2Int end_pixel)
+    {
         Vector2Int delta = end_pixel - start_pixel;
 
         if (delta == Vector2Int.zero)
@@ -124,15 +141,6 @@ public class Drawing : MonoBehaviour
             Vector2Int pixel = start_pixel + (delta * i / steps);
             MarkPixelToChange(pixel.x, pixel.y, Pen_Colour);
         }
-
-        // Ajoute toujours le point final
-        polygonVertices.Add(end);
-
-        ApplyMarkedPixelChanges();
-
-        // Set the last point as the first point for the next line
-        start_point = end;
-        is_drawing_line = true;
     }
 
     // Function to apply marked pixel changes to the texture
@@ -207,6 +215,7 @@ public class Drawing : MonoBehaviour
                     first_point = GetMouseWorldPosition();
                     start_point = first_point;
                     is_drawing_line = true;
+                    lastPolygonPixelVertices.Clear();
                 }
                 else
                 {
