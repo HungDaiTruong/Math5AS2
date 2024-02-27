@@ -59,6 +59,8 @@ public class Drawing : MonoBehaviour
     private Color green = Color.green;
     private Color white = Color.white;
     public Color[] penColors => new Color[] { red, green, blue, white };
+    public int W => (int)drawable_sprite.rect.width;
+    public int H => (int)drawable_sprite.rect.height;
     // Method to set pen brush color to black
     public void SetPenBrushWhite()
     {
@@ -75,7 +77,7 @@ public class Drawing : MonoBehaviour
 
     private bool TryGetArrayPos(int x, int y, out int p)
     {
-        if (y < 0 || y >= (int)drawable_sprite.rect.height || x < 0 || x >= (int)drawable_sprite.rect.width)
+        if (y < 0 || y >= H || x < 0 || x >= W)
         {
             p = -1;
             return false;
@@ -144,8 +146,8 @@ public class Drawing : MonoBehaviour
     Vector2Int WorldToPixelCoordinates(Vector2 world_position)
     {
         Vector3 local_pos = transform.InverseTransformPoint(world_position);
-        float pixelWidth = drawable_sprite.rect.width;
-        float pixelHeight = drawable_sprite.rect.height;
+        float pixelWidth = W;
+        float pixelHeight = H;
         float unitsToPixels = pixelWidth / drawable_sprite.bounds.size.x * transform.localScale.x;
         float centered_x = local_pos.x * unitsToPixels + pixelWidth / 2;
         float centered_y = local_pos.y * unitsToPixels + pixelHeight / 2;
@@ -240,11 +242,13 @@ public class Drawing : MonoBehaviour
         drawable_texture = drawable_sprite.texture;
         cur_colors = drawable_texture.GetPixels32();
 
-        clean_colours_array = new Color[(int)drawable_sprite.rect.width * (int)drawable_sprite.rect.height];
+        clean_colours_array = new Color[W * H];
         for (int x = 0; x < clean_colours_array.Length; x++)
             clean_colours_array[x] = Reset_Colour;
 
         if (Reset_Canvas_On_Play)
             ResetCanvas();
     }
+
+    
 }
