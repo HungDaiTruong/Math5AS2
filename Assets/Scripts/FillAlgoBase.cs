@@ -14,10 +14,13 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     public override void Operate()
     {
         fill = new Color32((byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256));
-        fill = Color.green;
-        //Fill(Random.Range(0, xMax), Random.Range(0, yMax));
+        //fill = Color.green;
+        //Fill(Random.Range(0, _drawer.W), Random.Range(0, _drawer.H));
         border = _drawer.penColors.Select<Color, Color32>(c => c).Append(_additionnalDrawingColor).ToArray();
-        Fill(_drawer.W/2, _drawer.H/2);
+        //Fill(_drawer.W/2, _drawer.H/2);
+        Debug.Log("in operate, x: " + _drawer.x + ", " + _drawer.y);
+        Fill(_drawer.x, _drawer.y);
+        //Fill(200, 500);
     }
 
     protected abstract void Fill(int xI, int yI);

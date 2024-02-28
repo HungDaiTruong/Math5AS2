@@ -10,6 +10,7 @@ public class FillSeed : FillAlgoBase
 
     protected override void Fill(int xI, int yI)
     {
+        Debug.Log("in operate, x: " + xI + ", " + yI);
         if (_rec)
         {
             Fill4Rec(xI, yI);

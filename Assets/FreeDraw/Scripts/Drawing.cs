@@ -37,7 +37,10 @@ public class Drawing : MonoBehaviour
     Vector2 start_point;
     Vector2 end_point;
     Vector2 first_point;
-
+    public bool is_filling=false;
+    public int x = 0;
+    public int y = 0;
+    public FillAlgoBase fillAlgoInstance;
     // Method to set pen brush color to red
     public void SetPenBrushRed()
     {
@@ -63,6 +66,11 @@ public class Drawing : MonoBehaviour
     public Color[] penColors => new Color[] { red, green, blue, white };
     public int W => (int)drawable_sprite.rect.width;
     public int H => (int)drawable_sprite.rect.height;
+
+    public void fill()
+    {
+        is_filling = true;
+    }
     // Method to set pen brush color to black
     public void SetPenBrushWhite()
     {
@@ -191,6 +199,7 @@ public class Drawing : MonoBehaviour
         if (Input.GetMouseButtonDown(2))
         {
             isDragging = true;
+            
             Vector3 clickPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             offset = textureTransform.position - clickPosition;
         }
@@ -207,22 +216,35 @@ public class Drawing : MonoBehaviour
         }
         if (Input.GetMouseButtonDown(0))
         {
-            Collider2D hit = Physics2D.OverlapPoint(GetMouseWorldPosition(), Drawing_Layers.value);
-            if (hit != null && hit.transform != null || !IsPointerOverUIObject())
+
+            if (is_filling)
             {
-                if (!is_drawing_line)
+                x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
+                y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
+                Debug.Log("x: " +  x + ", " + y); 
+                fillAlgoInstance.Operate();
+                is_filling = false;
+            }
+            else
+            {
+                Collider2D hit = Physics2D.OverlapPoint(GetMouseWorldPosition(), Drawing_Layers.value);
+                if (hit != null && hit.transform != null || !IsPointerOverUIObject())
                 {
-                    first_point = GetMouseWorldPosition();
-                    start_point = first_point;
-                    is_drawing_line = true;
-                    lastPolygonPixelVertices.Clear();
-                }
-                else
-                {
-                    end_point = GetMouseWorldPosition();
-                    DrawLine(start_point, end_point);
+                    if (!is_drawing_line)
+                    {
+                        first_point = GetMouseWorldPosition();
+                        start_point = first_point;
+                        is_drawing_line = true;
+                        lastPolygonPixelVertices.Clear();
+                    }
+                    else
+                    {
+                        end_point = GetMouseWorldPosition();
+                        DrawLine(start_point, end_point);
+                    }
                 }
             }
+                
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -236,6 +258,12 @@ public class Drawing : MonoBehaviour
         }
     }
 
+    IEnumerator operateStart()
+    {
+
+        yield return new WaitForSeconds(1);
+        
+    }
     // Function to reset the canvas
     public void ResetCanvas()
     {

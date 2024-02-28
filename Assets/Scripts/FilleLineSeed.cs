@@ -6,11 +6,13 @@ public class FilleLineSeed : FillAlgoBase
 {
     protected override void Fill(int xI, int yI)
     {
+
         StartCoroutine(FillByLines(xI, yI));
     }
 
     protected IEnumerator FillByLines(int xI, int yI)
     {
+        
         Stack<(int x, int y)> stack = new();
         stack.Push((xI, yI));
         int lines = -1;
