@@ -1,26 +1,21 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Drawing : MonoBehaviour
 {
-
     public List<Vector2> polygonVertices = new List<Vector2>();
-    public List<Vector2Int> lastPolygonPixelVertices = new List<Vector2Int>();
-
     public Camera mainCamera;
-    public float maxZoom = 5f;
-    public float minZoom = 1f;
+    public float maxZoom = 5f; 
+    public float minZoom = 1f; 
     public float zoomSpeed = 1f;
     public Transform textureTransform;
     private bool isDragging = false;
     private Vector3 offset;
 
-    public static Color Pen_Colour = Color.blue;
+    public static Color Pen_Colour = Color.black;
 
     public LayerMask Drawing_Layers;
 
@@ -29,7 +24,7 @@ public class Drawing : MonoBehaviour
 
     public static Drawing drawable;
     Sprite drawable_sprite;
-    Texture2D drawable_texture;
+    public Texture2D drawable_texture;
     Color[] clean_colours_array;
     Color32[] cur_colors;
 
@@ -37,106 +32,56 @@ public class Drawing : MonoBehaviour
     Vector2 start_point;
     Vector2 end_point;
     Vector2 first_point;
-    public bool is_filling=false;
-    public int x = 0;
-    public int y = 0;
-    public FillAlgoBase fillAlgoInstance;
+
     // Method to set pen brush color to red
     public void SetPenBrushRed()
     {
-        Pen_Colour = red;
+        Pen_Colour = Color.red;
     }
 
     // Method to set pen brush color to blue
     public void SetPenBrushBlue()
     {
-        Pen_Colour = blue;
+        Pen_Colour = Color.blue;
     }
 
     // Method to set pen brush color to green
     public void SetPenBrushGreen()
     {
-        Pen_Colour = green;
+        Pen_Colour = Color.green;
     }
 
-    private Color red = Color.red;
-    private Color blue = Color.blue;
-    private Color green = Color.green;
-    private Color white = Color.white;
-    public Color[] penColors => new Color[] { red, green, blue, white };
-    public int W => (int)drawable_sprite.rect.width;
-    public int H => (int)drawable_sprite.rect.height;
-
-    public void fill()
-    {
-        is_filling = true;
-    }
     // Method to set pen brush color to black
-    public void SetPenBrushWhite()
+    public void SetPenBrushBlack()
     {
-        Pen_Colour = white;
+        Pen_Colour = Color.black;
     }
 
     // Function to mark a pixel for color change
-    public void MarkPixelToChange(int x, int y, Color color)
+    void MarkPixelToChange(int x, int y, Color color)
     {
-        if (!TryGetArrayPos(x, y, out int array_pos))
+        int array_pos = y * (int)drawable_sprite.rect.width + x;
+        if (array_pos > cur_colors.Length || array_pos < 0)
             return;
-        cur_colors[array_pos] = color;
-    }
 
-    private bool TryGetArrayPos(int x, int y, out int p)
-    {
-        if (y < 0 || y >= H || x < 0 || x >= W)
-        {
-            p = -1;
-            return false;
-        }
-        p = y * (int)drawable_sprite.rect.width + x;
-        return true;
-    }
-    public Color32? GetCurColor(int x, int y)
-    {
-        if (!TryGetArrayPos(x, y, out int array_pos))
-            return null;
-        return cur_colors[array_pos];
-    }
-    public bool TryGetCurColor(int x, int y, out Color32 color)
-    {
-        var c = GetCurColor(x, y);
-        color = c.GetValueOrDefault();
-        if (!c.HasValue)
-            return false;
-        return true;
+        cur_colors[array_pos] = color;
     }
 
     // Function to draw a line between two points
     void DrawLine(Vector2 start, Vector2 end)
     {
+        //if (!is_drawing_line)
+        //{
+        //    polygonVertices.Add(start);
+        //}
 
         cur_colors = drawable_texture.GetPixels32();
         Vector2Int start_pixel = WorldToPixelCoordinates(start);
-        if (!is_drawing_line)
-        {
-            polygonVertices.Add(start);
-            lastPolygonPixelVertices.Add(start_pixel);
-        }
         Vector2Int end_pixel = WorldToPixelCoordinates(end);
-
-        DrawLineSimple(start_pixel, end_pixel);
-
-        // Ajoute toujours le point final
-        polygonVertices.Add(end);
-        lastPolygonPixelVertices.Add(end_pixel);
-
-        ApplyMarkedPixelChanges();
-
-        // Set the last point as the first point for the next line
-        start_point = end;
-        is_drawing_line = true;
-    }
-    public void DrawLineSimple(Vector2Int start_pixel, Vector2Int end_pixel)
-    {
+       
+        polygonVertices.Add(start_pixel);
+        
+            
         Vector2Int delta = end_pixel - start_pixel;
 
         if (delta == Vector2Int.zero)
@@ -149,21 +94,30 @@ public class Drawing : MonoBehaviour
             Vector2Int pixel = start_pixel + (delta * i / steps);
             MarkPixelToChange(pixel.x, pixel.y, Pen_Colour);
         }
+
+        // Ajoute toujours le point final
+        polygonVertices.Add(end_pixel);
+
+        ApplyMarkedPixelChanges();
+
+        // Set the last point as the first point for the next line
+        start_point = end;
+        is_drawing_line = true;
     }
 
     // Function to apply marked pixel changes to the texture
-    public void ApplyMarkedPixelChanges()
+    void ApplyMarkedPixelChanges()
     {
         drawable_texture.SetPixels32(cur_colors);
         drawable_texture.Apply();
     }
 
     // Function to convert world coordinates to pixel coordinates
-    Vector2Int WorldToPixelCoordinates(Vector2 world_position)
+    public Vector2Int WorldToPixelCoordinates(Vector2 world_position)
     {
         Vector3 local_pos = transform.InverseTransformPoint(world_position);
-        float pixelWidth = W;
-        float pixelHeight = H;
+        float pixelWidth = drawable_sprite.rect.width;
+        float pixelHeight = drawable_sprite.rect.height;
         float unitsToPixels = pixelWidth / drawable_sprite.bounds.size.x * transform.localScale.x;
         float centered_x = local_pos.x * unitsToPixels + pixelWidth / 2;
         float centered_y = local_pos.y * unitsToPixels + pixelHeight / 2;
@@ -199,7 +153,6 @@ public class Drawing : MonoBehaviour
         if (Input.GetMouseButtonDown(2))
         {
             isDragging = true;
-            
             Vector3 clickPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             offset = textureTransform.position - clickPosition;
         }
@@ -216,35 +169,21 @@ public class Drawing : MonoBehaviour
         }
         if (Input.GetMouseButtonDown(0))
         {
-
-            if (is_filling)
+            Collider2D hit = Physics2D.OverlapPoint(GetMouseWorldPosition(), Drawing_Layers.value);
+            if (hit != null && hit.transform != null || !IsPointerOverUIObject())
             {
-                x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
-                y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
-                Debug.Log("x: " +  x + ", " + y); 
-                fillAlgoInstance.Operate();
-                is_filling = false;
-            }
-            else
-            {
-                Collider2D hit = Physics2D.OverlapPoint(GetMouseWorldPosition(), Drawing_Layers.value);
-                if (hit != null && hit.transform != null || !IsPointerOverUIObject())
+                if (!is_drawing_line)
                 {
-                    if (!is_drawing_line)
-                    {
-                        first_point = GetMouseWorldPosition();
-                        start_point = first_point;
-                        is_drawing_line = true;
-                        lastPolygonPixelVertices.Clear();
-                    }
-                    else
-                    {
-                        end_point = GetMouseWorldPosition();
-                        DrawLine(start_point, end_point);
-                    }
+                    first_point = GetMouseWorldPosition();
+                    start_point = first_point;
+                    is_drawing_line = true;
+                }
+                else
+                {
+                    end_point = GetMouseWorldPosition();
+                    DrawLine(start_point, end_point);
                 }
             }
-                
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -258,18 +197,14 @@ public class Drawing : MonoBehaviour
         }
     }
 
-    IEnumerator operateStart()
-    {
-
-        yield return new WaitForSeconds(1);
-        
-    }
     // Function to reset the canvas
     public void ResetCanvas()
     {
         drawable_texture.SetPixels(clean_colours_array);
         drawable_texture.Apply();
+        polygonVertices.Clear(); // Efface la liste des sommets
     }
+
 
     void Awake()
     {
@@ -279,7 +214,7 @@ public class Drawing : MonoBehaviour
         drawable_texture = drawable_sprite.texture;
         cur_colors = drawable_texture.GetPixels32();
 
-        clean_colours_array = new Color[W * H];
+        clean_colours_array = new Color[(int)drawable_sprite.rect.width * (int)drawable_sprite.rect.height];
         for (int x = 0; x < clean_colours_array.Length; x++)
             clean_colours_array[x] = Reset_Colour;
 
@@ -287,5 +222,4 @@ public class Drawing : MonoBehaviour
             ResetCanvas();
     }
 
-    
 }
