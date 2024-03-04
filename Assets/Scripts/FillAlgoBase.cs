@@ -29,8 +29,4 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     {
         return PixelColorOrOut(x, y, border, out found);
     }
-    private bool IsInsidePolygon(List<Vector2Int> polygone, int xI, int yI)
-    {
-        throw new System.NotImplementedException();
-    }
 }

@@ -18,14 +18,11 @@ public abstract class DrawingRelatedAlgo : MonoBehaviour
     }
     protected List<Vector2Int> InsidePolygon(int x, int y)
     {
-        foreach (var polygone in _drawer.polygons)
-        {
-            if (IsInsidePolygon(polygone, x, y))
-            {
-                return polygone;
-            }
-        }
-        return null;
+        return _drawer.polygons.FirstOrDefault((l) => IsInsidePolygon(l, x, y));
+    }
+    private bool IsInsidePolygon(List<Vector2Int> polygone, int xI, int yI)
+    {
+        throw new System.NotImplementedException();
     }
     protected bool PixelColorOrOut(int x, int y, Color32 color, out Color32 found)
     {
@@ -34,7 +31,7 @@ public abstract class DrawingRelatedAlgo : MonoBehaviour
     private void Awake()
     {
         //_button.onClick.AddListener(Operate);
-        _button.onClick.AddListener(()=>_drawer.fillAlgoInstance=this);
+        _button.onClick.AddListener(() => _drawer.fillAlgoInstance = this);
         _button.onClick.AddListener(_drawer.fill);
     }
 
