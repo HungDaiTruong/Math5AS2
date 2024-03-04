@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,5 +28,9 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     protected bool PixelBorderOrOut(int x, int y, out Color32 found)
     {
         return PixelColorOrOut(x, y, border, out found);
+    }
+    private bool IsInsidePolygon(List<Vector2Int> polygone, int xI, int yI)
+    {
+        throw new System.NotImplementedException();
     }
 }

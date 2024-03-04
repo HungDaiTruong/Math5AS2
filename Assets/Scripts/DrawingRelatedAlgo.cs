@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,17 @@ public abstract class DrawingRelatedAlgo : MonoBehaviour
         //We need this cause out cannot be used in lambda
         var f = found;
         return color.Any(c => c.Equals(f));
+    }
+    protected List<Vector2Int> InsidePolygon(int x, int y)
+    {
+        foreach (var polygone in _drawer.polygons)
+        {
+            if (IsInsidePolygon(polygone, x, y))
+            {
+                return polygone;
+            }
+        }
+        return null;
     }
     protected bool PixelColorOrOut(int x, int y, Color32 color, out Color32 found)
     {

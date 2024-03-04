@@ -136,13 +136,11 @@ public class LCA : FillAlgoBase
 
     protected override void Fill(int xI, int yI)
     {
-      foreach (var polygone in _drawer.polygons)
-      {
-            if (isInsidePolygon(polygone, xI, yI))
-            {
-                FillPolygon(polygone);
-            }
-      }
-      //  FillPolygon();
+        var inside = InsidePolygon(xI, yI);
+        if (inside != null)
+            FillPolygon(inside);
     }
+    
+
+    
 }
