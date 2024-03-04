@@ -8,9 +8,9 @@ public class FillSeed : FillAlgoBase
 {
     [SerializeField] private bool _rec;
 
-    protected override void Fill(int xI, int yI)
+    protected override void FillA(int xI, int yI,List<Vector2Int> polygon)
     {
-        Debug.Log("in operate, x: " + xI + ", " + yI);
+        //Debug.Log("in operate, x: " + xI + ", " + yI);
         if (_rec)
         {
             Fill4Rec(xI, yI);
@@ -22,8 +22,7 @@ public class FillSeed : FillAlgoBase
 
     void Fill4Rec(int x, int y)
     {
-        var currC = _drawer.GetCurColor(x, y);
-        if (!currC.HasValue || currC.Equals(fill) || currC.Equals(border))
+        if (PixelBorderOrOut(x,y,out Color32 currC) || currC.Equals(fill))
             return;
         _drawer.MarkPixelToChange(x, y, fill);
         //Debug.Log($"filled {x},{y} intialy was {currC}, compared with {fill} and {border}, {currC.Equals(fill)},{currC.Equals(border)}");
@@ -41,8 +40,7 @@ public class FillSeed : FillAlgoBase
         {
             //Debug.Log("Has blue : " + (pix.First(p => p.b > 0f && p.b < 255)));
             var (x, y) = stack.Pop();
-            var currC = _drawer.GetCurColor(x, y);
-            if (!currC.HasValue || currC.Equals(fill) || currC.Equals(border))
+            if (PixelBorderOrOut(x, y, out Color32 currC) || currC.Equals(fill))
                 continue;
             _drawer.MarkPixelToChange(x, y, fill);
 

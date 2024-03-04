@@ -4,15 +4,14 @@ using UnityEngine;
 
 public class FilleLineSeed : FillAlgoBase
 {
-    protected override void Fill(int xI, int yI)
+    protected override void FillA(int xI, int yI, List<Vector2Int> l)
     {
-
         StartCoroutine(FillByLines(xI, yI));
     }
 
     protected IEnumerator FillByLines(int xI, int yI)
     {
-        
+
         Stack<(int x, int y)> stack = new();
         stack.Push((xI, yI));
         int lines = -1;
@@ -40,9 +39,9 @@ public class FilleLineSeed : FillAlgoBase
                 _drawer.ApplyMarkedPixelChanges();
                 yield return new WaitForSeconds(_ticks);
             }
-            else if (lines%_batches==0)
+            else if (lines % _batches == 0)
             {
-                if (lines % _displayBatches==0)
+                if (lines % _displayBatches == 0)
                     _drawer.ApplyMarkedPixelChanges();
                 yield return new WaitForEndOfFrame();
             }

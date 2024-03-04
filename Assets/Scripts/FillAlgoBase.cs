@@ -12,7 +12,7 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     protected Color32[] border;
     [SerializeField]
     protected Color32 fill;
-    public override void Operate()
+    public override void Fill(int x, int y, List<Vector2Int> l)
     {
         fill = new Color32((byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256));
         //fill = Color.green;
@@ -20,11 +20,11 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
         border = _drawer.penColors.Select<Color, Color32>(c => c).Append(_additionnalDrawingColor).ToArray();
         //Fill(_drawer.W/2, _drawer.H/2);
         Debug.Log("in operate, x: " + _drawer.x + ", " + _drawer.y);
-        Fill(_drawer.x, _drawer.y);
+        FillA(x, y, l);
         //Fill(200, 500);
     }
 
-    protected abstract void Fill(int xI, int yI);
+    protected abstract void FillA(int xI, int yI, List<Vector2Int> polygonToFill);
     protected bool PixelBorderOrOut(int x, int y, out Color32 found)
     {
         return PixelColorOrOut(x, y, border, out found);

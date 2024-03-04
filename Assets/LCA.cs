@@ -61,11 +61,11 @@ public class LCA : FillAlgoBase
         return edgeTable;
     }
 
-    public void FillPolygon(List<Vector2Int> polygoneToFill)
+    protected override void FillA(int xi, int yi, List<Vector2Int> polygoneToFill)
     {
-        Debug.Log($"Starting FillPolygon with {polygoneToFill.Count} vertices and color {fill}.");
+        Debug.Log($"Starting FillPolygon with {polygoneToFill?.Count} vertices and color {fill}.");
 
-        if (_drawer == null || polygoneToFill.Count < 3) return; // Assurer un polygone valide
+        if (_drawer == null || polygoneToFill == null || polygoneToFill.Count < 3) return; // Assurer un polygone valide
 
         List<Edge> SI = CreateEdgeTable(polygoneToFill);
         List<Edge> LCA = new List<Edge>();
@@ -133,14 +133,4 @@ public class LCA : FillAlgoBase
     {
         FillPolygon();
     }*/
-
-    protected override void Fill(int xI, int yI)
-    {
-        var inside = InsidePolygon(xI, yI);
-        if (inside != null)
-            FillPolygon(inside);
-    }
-    
-
-    
 }

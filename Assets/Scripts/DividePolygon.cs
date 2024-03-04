@@ -8,16 +8,18 @@ using UnityEngine.UIElements;
 public class DividePolygon : DrawingRelatedAlgo
 {
     [SerializeField, Range(-1, 10)] private int _depth = 1;
-    public override void Operate()
+    public override void Fill(int x, int y, List<Vector2Int> polygon)
     {
+        if (polygon == null)
+            return;
         var c = Drawing.Pen_Colour;
         Drawing.Pen_Colour = _additionnalDrawingColor;
-        var pol = _drawer.lastPolygonPixelVertices;
-        Triangulate(pol);
+        Triangulate(polygon);
         Drawing.Pen_Colour = c;
     }
 
-    private void Triangulate(List<Vector2Int> pol)
+
+    public void Triangulate(List<Vector2Int> pol)
     {
         if (_depth < 0)
         {
@@ -26,7 +28,7 @@ public class DividePolygon : DrawingRelatedAlgo
         }
         else
         {
-            for (int i = 0; i < _depth && pol.Count>3; i++)
+            for (int i = 0; i < _depth && pol.Count > 3; i++)
             {
                 pol = TriangulateOnce(pol);
                 Draw(pol, true);
@@ -37,7 +39,7 @@ public class DividePolygon : DrawingRelatedAlgo
     private List<Vector2Int> TriangulateOnce(List<Vector2Int> pol)
     {
         var newPol = new List<Vector2Int>();
-        for (int i = 0; i < pol.Count - 1; i+=2)
+        for (int i = 0; i < pol.Count - 1; i += 2)
         {
             newPol.Add(pol[i]);
         }

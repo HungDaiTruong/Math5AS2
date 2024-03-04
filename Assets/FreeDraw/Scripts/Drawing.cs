@@ -220,7 +220,7 @@ public class Drawing : MonoBehaviour
                 x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
                 y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
                 Debug.Log("x: " + x + ", " + y);
-                fillAlgoInstance.Operate();
+                fillAlgoInstance.Fill(x,y,InsidePolygon(polygons,x,y));
                 is_filling = false;
             }
             else
@@ -232,10 +232,7 @@ public class Drawing : MonoBehaviour
                     {
                         first_point = GetMouseWorldPosition();
                         start_point = first_point;
-                        is_drawing_line = true;
-                        if (lastPolygonPixelVertices.Count >= 3)
-                            polygons.Add(new List<Vector2Int>(lastPolygonPixelVertices));
-                        lastPolygonPixelVertices.Clear();
+                        is_drawing_line = true;            
                     }
                     else
                     {
@@ -254,10 +251,45 @@ public class Drawing : MonoBehaviour
                 end_point = first_point;
                 DrawLine(start_point, end_point);
                 is_drawing_line = false;
+                if (lastPolygonPixelVertices.Count >= 3)
+                    polygons.Add(new List<Vector2Int>(lastPolygonPixelVertices));
+                lastPolygonPixelVertices.Clear();
             }
         }
     }
+    //public abstract void FillPolygon(List<Vector2Int> polygonToFill);
+    protected static List<Vector2Int> InsidePolygon(List<List<Vector2Int>> polys, int x, int y)
+    {
+        return polys.FirstOrDefault((l) => IsInsidePolygon(l, x, y));
+    }
+    private static bool IsInsidePolygon(List<Vector2Int> polygon, int xI, int yI)
+    {
+        Vector2Int point = new Vector2Int(xI, yI);
+        float angleSum = 0;
+        int n = polygon.Count;
 
+        for (int i = 0; i < n; i++)
+        {
+            Vector2Int v1 = polygon[i] - point;
+            Vector2Int v2 = polygon[(i + 1) % n] - point;
+
+            float dot = Vector2.Dot(v1, v2);
+            float magV1 = v1.magnitude;
+            float magV2 = v2.magnitude;
+            float cosTheta = dot / (magV1 * magV2);
+
+            // Avoid division by zero in case of coincident points
+            if (magV1 == 0 || magV2 == 0)
+                return false;
+
+            float angle = (float)Mathf.Acos(cosTheta);
+            angleSum += angle;
+        }
+
+        // Convert radians to degrees and check if sum is approximately 360
+        float angleSumDegrees = angleSum * (180f / (float)Mathf.PI);
+        return Mathf.Abs(angleSumDegrees - 360) < 0.01f;
+    }
     IEnumerator operateStart()
     {
 
