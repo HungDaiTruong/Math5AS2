@@ -9,8 +9,8 @@ using UnityEngine.EventSystems;
 public class Drawing : MonoBehaviour
 {
 
-    public List<Vector2> polygonVertices = new List<Vector2>();
     public List<Vector2Int> lastPolygonPixelVertices = new List<Vector2Int>();
+    public List<List<Vector2Int>> polygons = new List<List<Vector2Int>>();
 
     public Camera mainCamera;
     public float maxZoom = 5f;
@@ -29,7 +29,7 @@ public class Drawing : MonoBehaviour
 
     public static Drawing drawable;
     Sprite drawable_sprite;
-    Texture2D drawable_texture;
+    public Texture2D drawable_texture;
     Color[] clean_colours_array;
     Color32[] cur_colors;
 
@@ -37,10 +37,10 @@ public class Drawing : MonoBehaviour
     Vector2 start_point;
     Vector2 end_point;
     Vector2 first_point;
-    public bool is_filling=false;
+    public bool is_filling = false;
     public int x = 0;
     public int y = 0;
-    public FillAlgoBase fillAlgoInstance;
+    public DrawingRelatedAlgo fillAlgoInstance;
     // Method to set pen brush color to red
     public void SetPenBrushRed()
     {
@@ -118,7 +118,6 @@ public class Drawing : MonoBehaviour
         Vector2Int start_pixel = WorldToPixelCoordinates(start);
         if (!is_drawing_line)
         {
-            polygonVertices.Add(start);
             lastPolygonPixelVertices.Add(start_pixel);
         }
         Vector2Int end_pixel = WorldToPixelCoordinates(end);
@@ -126,7 +125,6 @@ public class Drawing : MonoBehaviour
         DrawLineSimple(start_pixel, end_pixel);
 
         // Ajoute toujours le point final
-        polygonVertices.Add(end);
         lastPolygonPixelVertices.Add(end_pixel);
 
         ApplyMarkedPixelChanges();
@@ -199,7 +197,7 @@ public class Drawing : MonoBehaviour
         if (Input.GetMouseButtonDown(2))
         {
             isDragging = true;
-            
+
             Vector3 clickPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             offset = textureTransform.position - clickPosition;
         }
@@ -221,7 +219,7 @@ public class Drawing : MonoBehaviour
             {
                 x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
                 y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
-                Debug.Log("x: " +  x + ", " + y); 
+                Debug.Log("x: " + x + ", " + y);
                 fillAlgoInstance.Operate();
                 is_filling = false;
             }
@@ -235,6 +233,8 @@ public class Drawing : MonoBehaviour
                         first_point = GetMouseWorldPosition();
                         start_point = first_point;
                         is_drawing_line = true;
+                        if (lastPolygonPixelVertices.Count >= 3)
+                            polygons.Add(new List<Vector2Int>(lastPolygonPixelVertices));
                         lastPolygonPixelVertices.Clear();
                     }
                     else
@@ -244,7 +244,7 @@ public class Drawing : MonoBehaviour
                     }
                 }
             }
-                
+
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -262,7 +262,7 @@ public class Drawing : MonoBehaviour
     {
 
         yield return new WaitForSeconds(1);
-        
+
     }
     // Function to reset the canvas
     public void ResetCanvas()
@@ -287,5 +287,5 @@ public class Drawing : MonoBehaviour
             ResetCanvas();
     }
 
-    
+
 }

@@ -22,7 +22,7 @@ public abstract class DrawingRelatedAlgo : MonoBehaviour
     private void Awake()
     {
         //_button.onClick.AddListener(Operate);
-
+        _button.onClick.AddListener(()=>_drawer.fillAlgoInstance=this);
         _button.onClick.AddListener(_drawer.fill);
     }
 
