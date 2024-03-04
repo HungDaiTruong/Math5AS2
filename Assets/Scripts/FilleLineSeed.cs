@@ -6,6 +6,8 @@ public class FilleLineSeed : FillAlgoBase
 {
     protected override void FillA(int xI, int yI, List<Vector2Int> l)
     {
+        if (!Safe(ref xI, ref yI, l))
+            return;
         StartCoroutine(FillByLines(xI, yI));
     }
 

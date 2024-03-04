@@ -10,6 +10,8 @@ public class FillSeed : FillAlgoBase
 
     protected override void FillA(int xI, int yI,List<Vector2Int> polygon)
     {
+        if (!Safe(ref xI, ref yI, polygon))
+            return;
         //Debug.Log("in operate, x: " + xI + ", " + yI);
         if (_rec)
         {

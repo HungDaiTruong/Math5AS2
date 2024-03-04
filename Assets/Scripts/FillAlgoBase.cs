@@ -29,4 +29,17 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     {
         return PixelColorOrOut(x, y, border, out found);
     }
+    protected bool Safe(ref int x, ref int y, List<Vector2Int> polygon) {
+        if (x < 0 || y < 0)
+        {
+            if (polygon == null)
+                return false;
+            var pointInside = Drawing.PointInsidePoly(polygon);
+            if (!pointInside.HasValue)
+                return false;
+            x = pointInside.Value.x;
+            y = pointInside.Value.y;
+        }
+        return true;
+    }
 }

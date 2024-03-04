@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Random = UnityEngine.Random;
 
 public class Drawing : MonoBehaviour
 {
@@ -70,6 +71,32 @@ public class Drawing : MonoBehaviour
     public void fill()
     {
         is_filling = true;
+    }
+    public void FillAll()
+    {
+        is_filling = false;
+        foreach (var poly in polygons)
+        {
+            fillAlgoInstance.Fill(-1, -1, poly);
+        }
+    }
+    public static Vector2Int? PointInsidePoly(List<Vector2Int> v, int maxTry = 100)
+    {
+        Vector2Int low = new(v.Min(c => c.x), v.Min(c => c.y));
+        Vector2Int high = new(v.Max(c => c.x), v.Max(c => c.y));
+        // [-2,2]x[-2,2] around every point on poly, if not working we try random points inside the bounding box until max tries
+        try
+        {
+            return Enumerable.Range(-2, 4).SelectMany(i => Enumerable.Range(-2, 4).Select(j => new Vector2Int(i, j)))
+                                  .SelectMany(ij => v.Select(p => p + ij))
+                                  .Concat(Enumerable.Range(0, maxTry).Select(cnt => new Vector2Int(Random.Range(low.x, high.x), Random.Range(low.x, high.x))))
+                                  .First(finl => IsInsidePolygon(v, finl.x, finl.y));
+        }
+        //If no elements
+        catch (InvalidOperationException e)
+        {
+            return null;
+        }
     }
     // Method to set pen brush color to black
     public void SetPenBrushWhite()
@@ -220,7 +247,7 @@ public class Drawing : MonoBehaviour
                 x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
                 y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
                 Debug.Log("x: " + x + ", " + y);
-                fillAlgoInstance.Fill(x,y,InsidePolygon(polygons,x,y));
+                fillAlgoInstance.Fill(x, y, InsidePolygon(polygons, x, y));
                 is_filling = false;
             }
             else
@@ -232,7 +259,7 @@ public class Drawing : MonoBehaviour
                     {
                         first_point = GetMouseWorldPosition();
                         start_point = first_point;
-                        is_drawing_line = true;            
+                        is_drawing_line = true;
                     }
                     else
                     {
