@@ -326,6 +326,7 @@ public class Drawing : MonoBehaviour
     // Function to reset the canvas
     public void ResetCanvas()
     {
+        polygons.Clear();
         drawable_texture.SetPixels(clean_colours_array);
         drawable_texture.Apply();
     }
