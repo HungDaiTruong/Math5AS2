@@ -14,7 +14,8 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
     protected Color32 fill;
     public override void Fill(int x, int y, List<Vector2Int> l)
     {
-        fill = new Color32((byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256), (byte)UnityEngine.Random.Range(0, 256));
+        //We avoid value being 0 or 255 so we avoid small proabability of having same color as borders
+        fill = new Color32((byte)UnityEngine.Random.Range(1, 255), (byte)UnityEngine.Random.Range(1, 255), (byte)UnityEngine.Random.Range(1, 255), (byte)UnityEngine.Random.Range(100, 200));
         //fill = Color.green;
         //Fill(Random.Range(0, _drawer.W), Random.Range(0, _drawer.H));
         border = _drawer.penColors.Select<Color, Color32>(c => c).Append(_additionnalDrawingColor).ToArray();
@@ -34,7 +35,7 @@ public abstract class FillAlgoBase : DrawingRelatedAlgo
         {
             if (polygon == null)
                 return false;
-            var pointInside = Drawing.PointInsidePoly(polygon);
+            var pointInside = Drawing.PointInsidePoly(polygon,1000);
             if (!pointInside.HasValue)
                 return false;
             x = pointInside.Value.x;
