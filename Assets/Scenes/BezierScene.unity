@@ -241,7 +241,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 21930360}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: StartCheckingPolygon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &21930360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -889,9 +901,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Drawing, Assembly-CSharp
-        m_MethodName: FillAll
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: StartCheckingPolygon
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2657,7 +2669,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1025288875}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: StartCheckingPolygon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1025288875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2947,9 +2971,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Drawing, Assembly-CSharp
-        m_MethodName: ResetCanvas
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: Clear
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
