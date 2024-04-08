@@ -220,7 +220,10 @@ public class Drawing : MonoBehaviour
         mainCamera.orthographicSize = newSize;
 
         mainCamera.transform.position += (zoomPoint - mainCamera.transform.position) * newSizeChange / mainCamera.orthographicSize;
-
+        x = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).x);
+        y = Convert.ToInt32(WorldToPixelCoordinates(GetMouseWorldPosition()).y);
+        /*var dbg = InsidePolygon(polygons, x, y);
+        Debug.Log($"{dbg == null} is {dbg}");*/
         if (Input.GetMouseButtonDown(2))
         {
             isDragging = true;
@@ -291,31 +294,34 @@ public class Drawing : MonoBehaviour
     }
     private static bool IsInsidePolygon(List<Vector2Int> polygon, int xI, int yI)
     {
-        Vector2Int point = new Vector2Int(xI, yI);
+        Vector2 point = new Vector2(xI, yI);
         float angleSum = 0;
         int n = polygon.Count;
 
         for (int i = 0; i < n; i++)
         {
-            Vector2Int v1 = polygon[i] - point;
-            Vector2Int v2 = polygon[(i + 1) % n] - point;
+            Vector2 v1 = polygon[i] - point;
+            Vector2 v2 = polygon[(i + 1) % n] - point;
 
-            float dot = Vector2.Dot(v1, v2);
+            /*float dot = Vector2.Dot(v1, v2);
             float magV1 = v1.magnitude;
             float magV2 = v2.magnitude;
             float cosTheta = dot / (magV1 * magV2);
 
             // Avoid division by zero in case of coincident points
             if (magV1 == 0 || magV2 == 0)
-                return false;
+                return false;*/
 
-            float angle = (float)Mathf.Acos(cosTheta);
+            float angle = Vector2.SignedAngle(v1, v2);
+            Debug.Log("Angle i : " + angle + ", ind " + i);
             angleSum += angle;
         }
 
         // Convert radians to degrees and check if sum is approximately 360
-        float angleSumDegrees = angleSum * (180f / (float)Mathf.PI);
-        return Mathf.Abs(angleSumDegrees - 360) < 0.01f;
+        //float angleSumDegrees = angleSum * (180f / (float)Mathf.PI);
+        Debug.LogWarning("Sum : " + angleSum);
+        // if (angleSum > .1f)
+        return Mathf.Abs(Mathf.Abs(angleSum) - 360) < 0.1f;
     }
     IEnumerator operateStart()
     {
