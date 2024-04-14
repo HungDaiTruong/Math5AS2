@@ -8,7 +8,7 @@ public class PointHandler : MonoBehaviour
     public List<GameObject> points = new List<GameObject>(); // Liste pour stocker les points
     private List<GameObject> lines = new List<GameObject>(); // Liste pour stocker les objets ligne (polygones)
     private bool drawing = false; // Indique si le dessin est en cours
-    private Color currentColor = Color.red; // Couleur actuellement sélectionnée
+    public Color currentColor = Color.red; // Couleur actuellement sélectionnée
 
     private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
 

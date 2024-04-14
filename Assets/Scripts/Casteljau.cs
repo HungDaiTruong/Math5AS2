@@ -5,36 +5,76 @@ using UnityEngine;
 public class Casteljau : MonoBehaviour
 {
     public Transform[] controlPoints;
-    public int curveResolution = 50;
+    public int curveResolution = 45;
 
     public PointHandler pointHandler;
-    private LineRenderer lineRenderer;
+    private LineRenderer BezierLineRenderer;
+    private LineRenderer controlLineRenderer;
+
+    public Shader lineShader;
+    public float stepSize = 0.01f;
+    public float stepSizeChangeAmount = 0.001f; 
 
 
     // Start is called before the first frame update
     void Start()
     {
-        // Create a new GameObject with LineRenderer component for drawing the curve
-        GameObject lineObject = new GameObject("BezierCurve");
-        lineRenderer = lineObject.AddComponent<LineRenderer>();
-        lineRenderer.startWidth = 0.1f; // Adjust line width as needed
-        lineRenderer.endWidth = 0.1f;
 
+        GameObject controlLineObject = new GameObject("ControlLines");
+        controlLineRenderer = controlLineObject.AddComponent<LineRenderer>();
+        controlLineRenderer.startWidth = 0.3f; 
+        controlLineRenderer.endWidth = 0.3f;
+
+        GameObject lineObject = new GameObject("BezierCurve");
+        BezierLineRenderer = lineObject.AddComponent<LineRenderer>();
+        Material lineMaterial = new Material(lineShader);
+
+        BezierLineRenderer.material = lineMaterial;
+        controlLineRenderer.material = lineMaterial;
+
+        BezierLineRenderer.widthCurve = AnimationCurve.Linear(0.9f, 0.5f, 1, 0.5f);
+        BezierLineRenderer.textureMode = LineTextureMode.Tile;
+        BezierLineRenderer.numCapVertices = 10;
+        BezierLineRenderer.numCornerVertices = 10;
     }
 
-    // Method to extract positions from GameObjects and convert them to Vector2Int
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            stepSize += stepSizeChangeAmount;
+            DrawCurve();
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            stepSize -= stepSizeChangeAmount;
+            stepSize = Mathf.Max(stepSize, 0.001f);
+            DrawCurve();
+        }
+    }
+
     private Vector2Int[] ConvertPointsToVector2Int(List<GameObject> pointObjects)
     {
         Vector2Int[] vectorPoints = new Vector2Int[pointObjects.Count];
 
         for (int i = 0; i < pointObjects.Count; i++)
         {
-            // Get the position of the GameObject and convert it to Vector2Int
             Vector2Int position = new Vector2Int((int)pointObjects[i].transform.position.x, (int)pointObjects[i].transform.position.y);
             vectorPoints[i] = position;
         }
 
         return vectorPoints;
+    }
+
+    private void DrawControlLines(Vector2Int[] controlPoints)
+    {
+        controlLineRenderer.positionCount = controlPoints.Length;
+
+        for (int i = 0; i < controlPoints.Length; i++)
+        {
+            controlLineRenderer.SetPosition(i, new Vector3(controlPoints[i].x, controlPoints[i].y, 0));
+        }
     }
 
     public void DrawBezierCurve(Vector2Int[] controlPoints, int curveResolution)
@@ -45,23 +85,19 @@ public class Casteljau : MonoBehaviour
             return;
         }
 
-        // Set the number of vertices in the line renderer
-        lineRenderer.positionCount = curveResolution + 1;
+        int numPoints = Mathf.CeilToInt(1f / stepSize);
 
-        // Calculate and set the points on the Bezier curve
-        for (int i = 0; i <= curveResolution; i++)
-        {
-            float t = i / (float)curveResolution;
-            Vector2Int point = CalculateBezierPoint(t, controlPoints);
-            lineRenderer.SetPosition(i, new Vector3(point.x, point.y, 0)); // Set the position of the vertex
-        }
+        BezierLineRenderer.positionCount = numPoints;
 
-        for (int i = 0; i <= curveResolution; i++)
+        for (int i = 0; i < numPoints; i++)
         {
-            float t = i / (float)curveResolution;
+            float t = i * stepSize;
             Vector2Int point = CalculateBezierPoint(t, controlPoints);
-            // Draw or mark the point on the canvas
-            //MarkPixelToChange(point.x, point.y, Pen_Colour);
+            BezierLineRenderer.SetPosition(i, new Vector3(point.x, point.y, 0));
+
+            BezierLineRenderer.startColor = pointHandler.currentColor;
+            BezierLineRenderer.endColor = pointHandler.currentColor;
+
         }
     }
 
@@ -82,17 +118,28 @@ public class Casteljau : MonoBehaviour
             }
         }
 
-        Vector2Int result = new Vector2Int((int)points[0].x, (int)points[0].y);
+        Vector2Int result = new Vector2Int(Mathf.RoundToInt(points[0].x), Mathf.RoundToInt(points[0].y));
         return result;
     }
 
     public void DrawCurve()
     {
         print(pointHandler.points);
-        // Convert GameObject points to Vector2Int
+
         Vector2Int[] controlPoints = ConvertPointsToVector2Int(pointHandler.points);
 
-        // Draw the Bezier curve
-        DrawBezierCurve(controlPoints, curveResolution); // Adjust curve resolution as needed
+        DrawControlLines(controlPoints);
+
+        DrawBezierCurve(controlPoints, curveResolution); 
+    }
+
+    public void clearCurve()
+    {
+        LineRenderer[] lineRenderers = FindObjectsOfType<LineRenderer>();
+
+        foreach (LineRenderer lineRenderer in lineRenderers)
+        {
+            lineRenderer.positionCount = 0;
+        }
     }
 }
