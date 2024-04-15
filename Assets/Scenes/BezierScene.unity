@@ -4048,6 +4048,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controlPoints: {fileID: 1483318577}
   resolution: 30
+  lineShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  stepSize: 0.01
+  stepSizeChangeAmount: 0.001
 --- !u!1 &1610247445
 GameObject:
   m_ObjectHideFlags: 0
