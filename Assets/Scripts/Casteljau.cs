@@ -43,43 +43,20 @@ public class Casteljau : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             stepSize += stepSizeChangeAmount;
-            DrawCurve();
+            DrawBezierCurve();
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             stepSize -= stepSizeChangeAmount;
             stepSize = Mathf.Max(stepSize, 0.001f);
-            DrawCurve();
+            DrawBezierCurve();
         }
     }
 
-    private Vector2Int[] ConvertPointsToVector2Int(List<GameObject> pointObjects)
+    public void DrawBezierCurve()
     {
-        Vector2Int[] vectorPoints = new Vector2Int[pointObjects.Count];
-
-        for (int i = 0; i < pointObjects.Count; i++)
-        {
-            Vector2Int position = new Vector2Int((int)pointObjects[i].transform.position.x, (int)pointObjects[i].transform.position.y);
-            vectorPoints[i] = position;
-        }
-
-        return vectorPoints;
-    }
-
-    private void DrawControlLines(Vector2Int[] controlPoints)
-    {
-        controlLineRenderer.positionCount = controlPoints.Length;
-
-        for (int i = 0; i < controlPoints.Length; i++)
-        {
-            controlLineRenderer.SetPosition(i, new Vector3(controlPoints[i].x, controlPoints[i].y, 0));
-        }
-    }
-
-    public void DrawBezierCurve(Vector2Int[] controlPoints, int curveResolution)
-    {
-        if (controlPoints.Length < 2)
+        if (pointHandler.points.Count < 2)
         {
             Debug.LogError("At least two control points are required for drawing a Bezier curve.");
             return;
@@ -87,50 +64,44 @@ public class Casteljau : MonoBehaviour
 
         int numPoints = Mathf.CeilToInt(1f / stepSize);
 
-        BezierLineRenderer.positionCount = numPoints;
+        List<Vector3> curvePoints = new List<Vector3>();
+
 
         for (int i = 0; i < numPoints; i++)
         {
             float t = i * stepSize;
-            Vector2Int point = CalculateBezierPoint(t, controlPoints);
-            BezierLineRenderer.SetPosition(i, new Vector3(point.x, point.y, 0));
-
-            BezierLineRenderer.startColor = pointHandler.currentColor;
-            BezierLineRenderer.endColor = pointHandler.currentColor;
+            Vector3 point = CalculateBezierPoint(t, pointHandler.points);
+            curvePoints.Add(point);
 
         }
+
+        BezierLineRenderer.positionCount = curvePoints.Count;
+        BezierLineRenderer.startColor = pointHandler.currentColor;
+        BezierLineRenderer.endColor = pointHandler.currentColor;
+        BezierLineRenderer.SetPositions(curvePoints.ToArray());
+        BezierLineRenderer.positionCount = numPoints;
     }
 
-    private Vector2Int CalculateBezierPoint(float t, Vector2Int[] controlPoints)
+    private Vector3 CalculateBezierPoint(float t, List<GameObject> controlPoints)
     {
-        Vector2[] points = new Vector2[controlPoints.Length];
+        int numPoints = controlPoints.Count;
+        int lastIndex = numPoints - 1;
 
-        for (int i = 0; i < controlPoints.Length; i++)
+        List<Vector3> controlPositions = new List<Vector3>();
+
+        for (int i = 0; i < numPoints; i++)
         {
-            points[i] = controlPoints[i];
+            controlPositions.Add(controlPoints[i].transform.position);
         }
 
-        for (int j = 1; j < controlPoints.Length; j++)
+        for (int j = 1; j < numPoints; j++)
         {
-            for (int k = 0; k < controlPoints.Length - j; k++)
+            for (int k = 0; k < numPoints - j; k++)
             {
-                points[k] = points[k] * (1 - t) + points[k + 1] * t;
+                controlPositions[k] = controlPositions[k] * (1 - t) + controlPositions[k + 1] * t;
             }
         }
-
-        Vector2Int result = new Vector2Int(Mathf.RoundToInt(points[0].x), Mathf.RoundToInt(points[0].y));
-        return result;
-    }
-
-    public void DrawCurve()
-    {
-        print(pointHandler.points);
-
-        Vector2Int[] controlPoints = ConvertPointsToVector2Int(pointHandler.points);
-
-        DrawControlLines(controlPoints);
-
-        DrawBezierCurve(controlPoints, curveResolution); 
+        return controlPositions[0];
     }
 
     public void clearCurve()
