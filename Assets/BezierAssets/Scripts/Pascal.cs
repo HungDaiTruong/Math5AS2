@@ -7,6 +7,10 @@ public class Pascal : MonoBehaviour
     public PointHandler controlPoints;
     public int resolution = 30;
 
+    public Shader lineShader;
+    public float stepSize = 0.01f;
+    public float stepSizeChangeAmount = 0.001f;
+
     public void DrawCurve()
     {
         if (controlPoints.points.Count < 2)
@@ -29,9 +33,19 @@ public class Pascal : MonoBehaviour
 
         LineRenderer lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;
-        lineRenderer.startWidth = 0.1f;
-        lineRenderer.endWidth = 0.1f;
+        lineRenderer.startWidth = 0.3f;
+        lineRenderer.endWidth = 0.3f;
+        lineRenderer.startColor = controlPoints.currentColor;
+        lineRenderer.endColor = controlPoints.currentColor;
         lineRenderer.SetPositions(curvePoints.ToArray());
+
+
+        Material lineMaterial = new Material(lineShader);
+
+        lineRenderer.material = lineMaterial;
+        lineRenderer.textureMode = LineTextureMode.Tile;
+        lineRenderer.numCapVertices = 10;
+        lineRenderer.numCornerVertices = 10;
     }
 
     private Vector3 CalculateBezierPointUsingPascal(float t, List<GameObject> points)

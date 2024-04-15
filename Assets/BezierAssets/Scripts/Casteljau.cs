@@ -62,7 +62,7 @@ public class Casteljau : MonoBehaviour
 
 
 
-       Material lineMaterial = new Material(lineShader);
+        Material lineMaterial = new Material(lineShader);
 
         BezierLineRenderer.material = lineMaterial;
 
