@@ -9,34 +9,10 @@ public class Casteljau : MonoBehaviour
 
     public PointHandler pointHandler;
     private LineRenderer BezierLineRenderer;
-    private LineRenderer controlLineRenderer;
 
     public Shader lineShader;
     public float stepSize = 0.01f;
     public float stepSizeChangeAmount = 0.001f; 
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-        GameObject controlLineObject = new GameObject("ControlLines");
-        controlLineRenderer = controlLineObject.AddComponent<LineRenderer>();
-        controlLineRenderer.startWidth = 0.3f; 
-        controlLineRenderer.endWidth = 0.3f;
-
-        GameObject lineObject = new GameObject("BezierCurve");
-        BezierLineRenderer = lineObject.AddComponent<LineRenderer>();
-        Material lineMaterial = new Material(lineShader);
-
-        BezierLineRenderer.material = lineMaterial;
-        controlLineRenderer.material = lineMaterial;
-
-        BezierLineRenderer.widthCurve = AnimationCurve.Linear(0.9f, 0.5f, 1, 0.5f);
-        BezierLineRenderer.textureMode = LineTextureMode.Tile;
-        BezierLineRenderer.numCapVertices = 10;
-        BezierLineRenderer.numCornerVertices = 10;
-    }
 
     private void Update()
     {
@@ -75,11 +51,26 @@ public class Casteljau : MonoBehaviour
 
         }
 
+        GameObject bezierCurveObj = new GameObject("BezierCurve");
+        BezierLineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
+
         BezierLineRenderer.positionCount = curvePoints.Count;
         BezierLineRenderer.startColor = pointHandler.currentColor;
         BezierLineRenderer.endColor = pointHandler.currentColor;
         BezierLineRenderer.SetPositions(curvePoints.ToArray());
-        BezierLineRenderer.positionCount = numPoints;
+
+
+
+
+       Material lineMaterial = new Material(lineShader);
+
+        BezierLineRenderer.material = lineMaterial;
+
+        BezierLineRenderer.startWidth = 0.3f;
+        BezierLineRenderer.endWidth = 0.3f;
+        BezierLineRenderer.textureMode = LineTextureMode.Tile;
+        BezierLineRenderer.numCapVertices = 10;
+        BezierLineRenderer.numCornerVertices = 10;
     }
 
     private Vector3 CalculateBezierPoint(float t, List<GameObject> controlPoints)
