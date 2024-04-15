@@ -52,7 +52,7 @@ public class PointHandler : MonoBehaviour
     }
 
     // Méthode pour connecter les points pour former un polygone
-    void ConnectPoints()
+    public void ConnectPoints()
     {
         // S'assurer qu'il y a au moins 3 points pour former un polygone
         if (points.Count < 3)
