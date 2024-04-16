@@ -152,6 +152,7 @@ public class MatriceOperations : MonoBehaviour
 
     private void UpdatePolygon(GameObject AselectedObject)
     {
+        //pour modifier les lignes du polygone
         newPoly = FindPolygon(AselectedObject);
         renderer = AselectedObject.transform.parent.GetComponent<LineRenderer>();
 
@@ -163,18 +164,18 @@ public class MatriceOperations : MonoBehaviour
         }
         renderer.sortingOrder = 1; 
 
+        //modifier la courbe
         DecasteljauCurveObj = DecasteljauCurveIsPresent(AselectedObject.transform.parent.gameObject);
         if (DecasteljauCurveObj != null)
         {
             print("curve present");
-                decasteljauScript.UpdateDecasteljau(newPoly, AselectedObject.transform.parent.gameObject);
+                decasteljauScript.UpdateDecasteljau(newPoly, DecasteljauCurveObj);
                 print("casteljau function worked");
             
         } else
         {
             print("curve not present");
         }
-
         
     }
 
