@@ -16,6 +16,7 @@ public class PointHandler : MonoBehaviour
 
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
+    public bool clearOne = false;
 
     void Update()
     {
@@ -59,15 +60,21 @@ public class PointHandler : MonoBehaviour
 
                 if (decasteljauScript.decasteljau)
                 {
-                    decasteljauScript.DrawBezierCurve(polygonPoints);
+                    decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
                     decasteljauScript.decasteljau = false;
                     print("casteljau function worked");
 
                 } else if (pascalScript.pascal)
                 {
-                    pascalScript.DrawCurve(polygonPoints);
+                    pascalScript.DrawCurve(polygonPoints, insidePolygon);
                     pascalScript.pascal = false;
                     print("pascal function worked");
+                } else if(clearOne)
+                {
+                    Destroy(insidePolygon);
+                    clearOne = false;
+                    lines.Remove(insidePolygon);    
+                    print("cleared one polygon");
                 }
             }
             else
@@ -77,6 +84,10 @@ public class PointHandler : MonoBehaviour
         }
     }
 
+    public void ClearOne()
+    {
+        clearOne = true;
+    }
     // Méthode pour connecter les points pour former un polygone
     public void ConnectPoints()
     {
@@ -147,6 +158,12 @@ public class PointHandler : MonoBehaviour
     {
         currentColor = Color.blue;
         drawing = true; // Commencer le dessin lorsque la couleur est sélectionnée
+    }
+
+    public void SetColorBlack()
+    {
+        currentColor = Color.black;
+        drawing = true;
     }
 
     // Méthode pour vérifier si le pointeur de la souris est sur un objet UI

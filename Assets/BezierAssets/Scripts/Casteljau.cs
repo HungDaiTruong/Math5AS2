@@ -35,7 +35,7 @@ public class Casteljau : MonoBehaviour
         }
     }
 
-    public void DrawBezierCurve(List<GameObject> controlPoints)
+    public void DrawBezierCurve(List<GameObject> controlPoints, GameObject parent)
     {
         if (controlPoints.Count < 2)
         {
@@ -57,6 +57,7 @@ public class Casteljau : MonoBehaviour
         }
 
         GameObject bezierCurveObj = new GameObject("BezierCurve");
+        bezierCurveObj.transform.SetParent(parent.transform);
         BezierLineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
 
         BezierLineRenderer.positionCount = curvePoints.Count;
