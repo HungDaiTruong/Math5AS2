@@ -242,33 +242,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
+      - m_Target: {fileID: 1483318579}
+        m_TargetAssemblyTypeName: Casteljau, Assembly-CSharp
+        m_MethodName: ActivateCasteljau
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 1483318577}
         m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
         m_MethodName: StartCheckingPolygon
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1483318579}
-        m_TargetAssemblyTypeName: Casteljau, Assembly-CSharp
-        m_MethodName: DrawBezierCurve
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1483318577}
-        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
-        m_MethodName: ConnectPoints
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2708,19 +2696,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 1483318580}
         m_TargetAssemblyTypeName: Pascal, Assembly-CSharp
-        m_MethodName: DrawCurve
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1483318577}
-        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
-        m_MethodName: ConnectPoints
+        m_MethodName: ActivatePascal
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4001,6 +3977,8 @@ MonoBehaviour:
   pointPrefab: {fileID: 3413118111657084185, guid: 2d766f6b8f562fe47b9ba787003daae0, type: 3}
   points: []
   currentColor: {r: 1, g: 0, b: 0, a: 1}
+  decasteljauScript: {fileID: 1483318579}
+  pascalScript: {fileID: 1483318580}
 --- !u!4 &1483318578
 Transform:
   m_ObjectHideFlags: 0
@@ -4034,6 +4012,7 @@ MonoBehaviour:
   lineShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   stepSize: 0.01
   stepSizeChangeAmount: 0.001
+  decasteljau: 0
 --- !u!114 &1483318580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4051,6 +4030,7 @@ MonoBehaviour:
   lineShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   stepSize: 0.01
   stepSizeChangeAmount: 0.001
+  pascal: 0
 --- !u!1 &1610247445
 GameObject:
   m_ObjectHideFlags: 0

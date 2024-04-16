@@ -18,7 +18,6 @@ public class FilleLineSeed : FillAlgoBase
         stack.Push((xI, yI));
         int lines = -1;
         //We just need to store one current color, we don't use leftColor or rightColor we can use same variable
-        Color32 color;
         int xd;
         int xg;
         while (stack.Count > 0)

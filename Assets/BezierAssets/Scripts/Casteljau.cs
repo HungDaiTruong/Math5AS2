@@ -12,27 +12,32 @@ public class Casteljau : MonoBehaviour
 
     public Shader lineShader;
     public float stepSize = 0.01f;
-    public float stepSizeChangeAmount = 0.001f; 
+    public float stepSizeChangeAmount = 0.001f;
+
+    public bool decasteljau = false;
+
+    public void ActivateCasteljau()
+    {
+        decasteljau = true;
+    }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             stepSize += stepSizeChangeAmount;
-            DrawBezierCurve();
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             stepSize -= stepSizeChangeAmount;
             stepSize = Mathf.Max(stepSize, 0.001f);
-            DrawBezierCurve();
         }
     }
 
-    public void DrawBezierCurve()
+    public void DrawBezierCurve(List<GameObject> controlPoints)
     {
-        if (pointHandler.points.Count < 2)
+        if (controlPoints.Count < 2)
         {
             Debug.LogError("At least two control points are required for drawing a Bezier curve.");
             return;
@@ -46,7 +51,7 @@ public class Casteljau : MonoBehaviour
         for (int i = 0; i < numPoints; i++)
         {
             float t = i * stepSize;
-            Vector3 point = CalculateBezierPoint(t, pointHandler.points);
+            Vector3 point = CalculateBezierPoint(t, controlPoints);
             curvePoints.Add(point);
 
         }
@@ -58,9 +63,6 @@ public class Casteljau : MonoBehaviour
         BezierLineRenderer.startColor = pointHandler.currentColor;
         BezierLineRenderer.endColor = pointHandler.currentColor;
         BezierLineRenderer.SetPositions(curvePoints.ToArray());
-
-
-
 
         Material lineMaterial = new Material(lineShader);
 
