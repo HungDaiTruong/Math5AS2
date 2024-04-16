@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
@@ -16,6 +17,7 @@ public class PointHandler : MonoBehaviour
 
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
+    public bool clearOne = false;
 
     void Update()
     {
@@ -28,6 +30,7 @@ public class PointHandler : MonoBehaviour
 
             // Instancier un objet point à la position de la souris
             GameObject point = Instantiate(pointPrefab, mousePos, Quaternion.identity);
+            point.tag = "controlPoint";
             point.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du point
             points.Add(point); // Ajouter le point à la liste
         }
@@ -36,8 +39,9 @@ public class PointHandler : MonoBehaviour
         if (Input.GetMouseButtonDown(1) && drawing)
         {
             drawing = false; // Arrêter le dessin
-            ConnectPoints(); // Connecter les points pour former un polygone
-            courbes.Add(new List<GameObject>(points));
+            List<GameObject> currentPoints = new List<GameObject>(points);
+            ConnectPoints(currentPoints); // Connecter les points pour former un polygone
+            courbes.Add(currentPoints);
         }
 
         // Vérifier si la vérification des polygones est active et si le clic gauche de la souris est enfoncé
@@ -59,16 +63,23 @@ public class PointHandler : MonoBehaviour
 
                 if (decasteljauScript.decasteljau)
                 {
-                    decasteljauScript.DrawBezierCurve(polygonPoints);
+                    decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
                     decasteljauScript.decasteljau = false;
                     print("casteljau function worked");
 
                 } else if (pascalScript.pascal)
                 {
-                    pascalScript.DrawCurve(polygonPoints);
+                    pascalScript.DrawCurve(polygonPoints, insidePolygon);
                     pascalScript.pascal = false;
                     print("pascal function worked");
-                }
+                } else if(clearOne)
+                {
+                    Destroy(insidePolygon);
+                    clearOne = false;
+                    lines.Remove(insidePolygon); 
+                    //need to add : delete the polygon from 'courbes'
+                    print("cleared one polygon");
+                } 
             }
             else
             {
@@ -76,12 +87,16 @@ public class PointHandler : MonoBehaviour
             }
         }
     }
+    public void ClearOne()
+    {
+        clearOne = true;
+    }
 
     // Méthode pour connecter les points pour former un polygone
-    public void ConnectPoints()
+    public void ConnectPoints(List<GameObject> currentPoints)
     {
         // S'assurer qu'il y a au moins 3 points pour former un polygone
-        if (points.Count < 3)
+        if (currentPoints.Count < 3)
         {
             Debug.LogWarning("Pas assez de points pour former un polygone.");
             return;
@@ -93,7 +108,7 @@ public class PointHandler : MonoBehaviour
 
         // Ajouter un composant LineRenderer pour dessiner les lignes
         LineRenderer lineRenderer = polygonObj.AddComponent<LineRenderer>();
-        lineRenderer.positionCount = points.Count; // Définir le nombre de positions
+        lineRenderer.positionCount = currentPoints.Count; // Définir le nombre de positions
         lineRenderer.startWidth = 0.1f; // Définir la largeur de la ligne
         lineRenderer.endWidth = 0.1f;
         lineRenderer.loop = true; // Relier le dernier point au premier point
@@ -102,10 +117,10 @@ public class PointHandler : MonoBehaviour
         lineRenderer.material.color = currentColor;
 
         // Définir les positions pour le LineRenderer
-        for (int i = 0; i < points.Count; i++)
+        for (int i = 0; i < currentPoints.Count; i++)
         {
-            lineRenderer.SetPosition(i, points[i].transform.position);
-            points[i].transform.parent = polygonObj.transform; // Faire du point un enfant de l'objet ligne (polygone)
+            lineRenderer.SetPosition(i, currentPoints[i].transform.position);
+            currentPoints[i].transform.parent = polygonObj.transform; // Faire du point un enfant de l'objet ligne (polygone)
         }
 
         // Effacer la liste des points pour la prochaine session de dessin
@@ -147,6 +162,12 @@ public class PointHandler : MonoBehaviour
     {
         currentColor = Color.blue;
         drawing = true; // Commencer le dessin lorsque la couleur est sélectionnée
+    }
+
+    public void SetColorBlack()
+    {
+        currentColor = Color.black;
+        drawing = true;
     }
 
     // Méthode pour vérifier si le pointeur de la souris est sur un objet UI

@@ -17,7 +17,7 @@ public class Pascal : MonoBehaviour
     {
         pascal = true;
     }
-    public void DrawCurve(List<GameObject> controlPointsList)
+    public void DrawCurve(List<GameObject> controlPointsList, GameObject parent)
     {
         if (controlPointsList.Count < 2)
         {
@@ -35,7 +35,8 @@ public class Pascal : MonoBehaviour
             curvePoints.Add(point);
         }
 
-        GameObject bezierCurveObj = new GameObject("Bezier Curve");
+        GameObject bezierCurveObj = new GameObject("PascalBezierCurve");
+        bezierCurveObj.transform.SetParent(parent.transform);
 
         LineRenderer lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;
