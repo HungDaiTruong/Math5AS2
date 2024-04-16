@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Experimental.AI;
 
 public class PointHandler : MonoBehaviour
 {
@@ -11,6 +12,10 @@ public class PointHandler : MonoBehaviour
     public Color currentColor = Color.red; // Couleur actuellement sélectionnée
 
     private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
+    public List<List<GameObject>> courbes = new List<List<GameObject>>();
+
+    public Casteljau decasteljauScript;
+    public Pascal pascalScript;
 
     void Update()
     {
@@ -32,6 +37,7 @@ public class PointHandler : MonoBehaviour
         {
             drawing = false; // Arrêter le dessin
             ConnectPoints(); // Connecter les points pour former un polygone
+            courbes.Add(new List<GameObject>(points));
         }
 
         // Vérifier si la vérification des polygones est active et si le clic gauche de la souris est enfoncé
@@ -43,6 +49,26 @@ public class PointHandler : MonoBehaviour
             {
                 Debug.Log("Clic à l'intérieur du polygone : " + insidePolygon.name);
                 // Faites quelque chose avec l'objet line (polygone) trouvé
+
+                // Get the points of the clicked polygon
+                List<GameObject> polygonPoints = new List<GameObject>();
+                foreach (Transform child in insidePolygon.transform)
+                {
+                    polygonPoints.Add(child.gameObject);
+                }
+
+                if (decasteljauScript.decasteljau)
+                {
+                    decasteljauScript.DrawBezierCurve(polygonPoints);
+                    decasteljauScript.decasteljau = false;
+                    print("casteljau function worked");
+
+                } else if (pascalScript.pascal)
+                {
+                    pascalScript.DrawCurve(polygonPoints);
+                    pascalScript.pascal = false;
+                    print("pascal function worked");
+                }
             }
             else
             {
@@ -100,6 +126,8 @@ public class PointHandler : MonoBehaviour
             Destroy(line);
         }
         lines.Clear();
+
+        courbes.Clear();
     }
 
     // Méthode pour définir la couleur de dessin actuelle

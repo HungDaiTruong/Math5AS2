@@ -11,9 +11,15 @@ public class Pascal : MonoBehaviour
     public float stepSize = 0.01f;
     public float stepSizeChangeAmount = 0.001f;
 
-    public void DrawCurve()
+    public bool pascal = false;
+
+    public void ActivatePascal()
     {
-        if (controlPoints.points.Count < 2)
+        pascal = true;
+    }
+    public void DrawCurve(List<GameObject> controlPointsList)
+    {
+        if (controlPointsList.Count < 2)
         {
             Debug.LogError("Se necesitan al menos 2 puntos de control para una curva de Bezier.");
             return;
@@ -25,7 +31,7 @@ public class Pascal : MonoBehaviour
         {
             float t = (float)j / resolution;
 
-            Vector3 point = CalculateBezierPointUsingPascal(t, controlPoints.points);
+            Vector3 point = CalculateBezierPointUsingPascal(t, controlPointsList);
             curvePoints.Add(point);
         }
 
