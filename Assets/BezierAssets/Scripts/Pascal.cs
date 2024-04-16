@@ -35,7 +35,7 @@ public class Pascal : MonoBehaviour
             curvePoints.Add(point);
         }
 
-        GameObject bezierCurveObj = new GameObject("Bezier Curve");
+        GameObject bezierCurveObj = new GameObject("PascalBezierCurve");
         bezierCurveObj.transform.SetParent(parent.transform);
 
         LineRenderer lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
