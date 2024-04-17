@@ -55,6 +55,42 @@ public class Pascal : MonoBehaviour
         lineRenderer.numCornerVertices = 10;
     }
 
+    public void UpdateCurve(List<GameObject> controlPointsList, GameObject bezierCurveObj)
+    {
+        if (controlPointsList.Count < 2)
+        {
+            Debug.LogError("Se necesitan al menos 2 puntos de control para una curva de Bezier.");
+            return;
+        }
+
+        List<Vector3> curvePoints = new List<Vector3>();
+
+        for (int j = 0; j <= resolution; j++)
+        {
+            float t = (float)j / resolution;
+
+            Vector3 point = CalculateBezierPointUsingPascal(t, controlPointsList);
+            curvePoints.Add(point);
+        }
+
+
+        LineRenderer lineRenderer = bezierCurveObj.GetComponent<LineRenderer>();
+        lineRenderer.positionCount = curvePoints.Count;
+        lineRenderer.startWidth = 0.3f;
+        lineRenderer.endWidth = 0.3f;
+        lineRenderer.startColor = controlPoints.currentColor;
+        lineRenderer.endColor = controlPoints.currentColor;
+        lineRenderer.SetPositions(curvePoints.ToArray());
+
+
+        Material lineMaterial = new Material(lineShader);
+
+        lineRenderer.material = lineMaterial;
+        lineRenderer.textureMode = LineTextureMode.Tile;
+        lineRenderer.numCapVertices = 10;
+        lineRenderer.numCornerVertices = 10;
+    }
+
     private Vector3 CalculateBezierPointUsingPascal(float t, List<GameObject> points)
     {
         int numPoints = points.Count;

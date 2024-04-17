@@ -34,7 +34,7 @@ public class MatriceOperations : MonoBehaviour
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
 
-    private GameObject DecasteljauCurveObj;
+    private GameObject BezierCurveObj;
     private void Start()
     {
         translateButton.onClick.AddListener(StartTranslation);
@@ -165,12 +165,19 @@ public class MatriceOperations : MonoBehaviour
         renderer.sortingOrder = 1; 
 
         //modifier la courbe
-        DecasteljauCurveObj = DecasteljauCurveIsPresent(AselectedObject.transform.parent.gameObject);
-        if (DecasteljauCurveObj != null)
+        BezierCurveObj = BezierCurveIsPresent(AselectedObject.transform.parent.gameObject);
+        if (BezierCurveObj != null)
         {
             print("curve present");
-                decasteljauScript.UpdateDecasteljau(newPoly, DecasteljauCurveObj);
+            if (BezierCurveObj.name == "CasteljauBezierCurve")
+            {
+                decasteljauScript.UpdateDecasteljau(newPoly, BezierCurveObj);
                 print("casteljau function worked");
+            } else if (BezierCurveObj.name == "PascalBezierCurve")
+            {
+                pascalScript.UpdateCurve(newPoly, BezierCurveObj);
+            }
+                
             
         } else
         {
@@ -179,12 +186,12 @@ public class MatriceOperations : MonoBehaviour
         
     }
 
-    private GameObject DecasteljauCurveIsPresent(GameObject parent)
+    private GameObject BezierCurveIsPresent(GameObject parent)
     {
         foreach (Transform child in parent.transform)
         {
             // Check if the name of the current child matches the specified name
-            if (child.gameObject.name == "CasteljauBezierCurve")
+            if (child.gameObject.name == "CasteljauBezierCurve" || child.gameObject.name == "PascalBezierCurve")
             {
                 return child.gameObject;
             }
