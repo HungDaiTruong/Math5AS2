@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class Casteljau : MonoBehaviour
@@ -16,6 +18,11 @@ public class Casteljau : MonoBehaviour
 
     public bool decasteljau = false;
 
+    List<GameObject> points = new List<GameObject>();
+    GameObject curve;
+
+    public Pascal pascalScript;
+
     public void ActivateCasteljau()
     {
         decasteljau = true;
@@ -26,18 +33,22 @@ public class Casteljau : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             stepSize += stepSizeChangeAmount;
+            UpdateStep();
+            pascalScript.UpdateStep();
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             stepSize -= stepSizeChangeAmount;
             stepSize = Mathf.Max(stepSize, 0.001f);
+            UpdateStep();
+            pascalScript.UpdateStep();
         }
-
     }
 
     public void DrawBezierCurve(List<GameObject> controlPoints, GameObject parent)
     {
+        points = controlPoints;
         if (controlPoints.Count < 2)
         {
             Debug.LogError("At least two control points are required for drawing a Bezier curve.");
@@ -58,6 +69,7 @@ public class Casteljau : MonoBehaviour
         }
 
         GameObject bezierCurveObj = new GameObject("CasteljauBezierCurve");
+        curve = bezierCurveObj;
         bezierCurveObj.transform.SetParent(parent.transform);
         BezierLineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
 
@@ -79,6 +91,7 @@ public class Casteljau : MonoBehaviour
 
     public void UpdateDecasteljau(List<GameObject> controlPoints, GameObject bezierCurveObj)
     {
+        points = controlPoints;
         if (controlPoints.Count < 2)
         {
             Debug.LogError("At least two control points are required for drawing a Bezier curve.");
@@ -99,7 +112,7 @@ public class Casteljau : MonoBehaviour
         }
 
         BezierLineRenderer = bezierCurveObj.GetComponent<LineRenderer>();
-
+        curve = bezierCurveObj;
         BezierLineRenderer.positionCount = curvePoints.Count;
         BezierLineRenderer.startColor = pointHandler.currentColor;
         BezierLineRenderer.endColor = pointHandler.currentColor;
@@ -118,6 +131,49 @@ public class Casteljau : MonoBehaviour
         BezierLineRenderer.sortingOrder = 0;
     }
 
+    public void UpdateStep()
+    {
+        if (curve != null)
+        {
+            if (points.Count < 2)
+            {
+                Debug.LogError("At least two control points are required for drawing a Bezier curve.");
+                return;
+            }
+
+            int numPoints = Mathf.CeilToInt(1f / stepSize);
+
+            List<Vector3> curvePoints = new List<Vector3>();
+
+
+            for (int i = 0; i < numPoints; i++)
+            {
+                float t = i * stepSize;
+                Vector3 point = CalculateBezierPoint(t, points);
+                curvePoints.Add(point);
+
+            }
+
+            BezierLineRenderer = curve.GetComponent<LineRenderer>();
+
+            BezierLineRenderer.positionCount = curvePoints.Count;
+            BezierLineRenderer.startColor = pointHandler.currentColor;
+            BezierLineRenderer.endColor = pointHandler.currentColor;
+            BezierLineRenderer.SetPositions(curvePoints.ToArray());
+
+            Material lineMaterial = new Material(lineShader);
+
+            BezierLineRenderer.material = lineMaterial;
+
+            BezierLineRenderer.startWidth = 0.3f;
+            BezierLineRenderer.endWidth = 0.3f;
+            BezierLineRenderer.textureMode = LineTextureMode.Tile;
+            BezierLineRenderer.numCapVertices = 10;
+            BezierLineRenderer.numCornerVertices = 10;
+
+            BezierLineRenderer.sortingOrder = 0;
+        }
+    }
     private Vector3 CalculateBezierPoint(float t, List<GameObject> controlPoints)
     {
         int numPoints = controlPoints.Count;

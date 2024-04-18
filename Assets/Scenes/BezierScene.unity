@@ -3928,7 +3928,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1168616258}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1483318581}
+        m_TargetAssemblyTypeName: MatriceOperations, Assembly-CSharp
+        m_MethodName: StartShearing
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1168616258
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4828,8 +4840,9 @@ MonoBehaviour:
   pointHandler: {fileID: 1483318577}
   lineShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   stepSize: 0.01
-  stepSizeChangeAmount: 0.001
+  stepSizeChangeAmount: 0.01
   decasteljau: 0
+  pascalScript: {fileID: 1483318580}
 --- !u!114 &1483318580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4843,11 +4856,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controlPoints: {fileID: 1483318577}
-  resolution: 30
   lineShader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  stepSize: 0.01
-  stepSizeChangeAmount: 0.001
   pascal: 0
+  casteljauScript: {fileID: 1483318579}
 --- !u!114 &1483318581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4866,21 +4877,25 @@ MonoBehaviour:
   translating: 0
   rotating: 0
   scaling: 0
+  shearing: 0
+  deletePoint: 0
   translationSpeed: 5
-  rotationSpeed: 5
-  scalingSpeed: 5
   translationIconPrefab: {fileID: 8121012739771219151, guid: 20589510899bfc545841a96490106555, type: 3}
-  rotationIconPrefab: {fileID: 1875155397637131658, guid: 22b98a4242eff1c478b0fdd480b2a9c0, type: 3}
-  scalingIconPrefab: {fileID: 7635367957648537709, guid: a4fdc892b5ac88044b6ea3714df4eba9, type: 3}
   translationIconOffset: {x: 5, y: 5, z: 0}
+  rotationSpeed: 22
+  rotationIconPrefab: {fileID: 1875155397637131658, guid: 22b98a4242eff1c478b0fdd480b2a9c0, type: 3}
   rotationIconOffset: {x: 0, y: 0, z: 0}
+  scalingSpeed: 3
+  scalingIconPrefab: {fileID: 7635367957648537709, guid: a4fdc892b5ac88044b6ea3714df4eba9, type: 3}
   scalingIconOffset: {x: 0, y: 0, z: 0}
+  initialScale: {x: 1, y: 1, z: 1}
+  scaleSensitivity: 0.5
+  shearingSpeed: 5
+  shearingIconPrefab: {fileID: 0}
+  shearingIconOffset: {x: 0, y: 0, z: 0}
   pointHandler: {fileID: 1483318577}
   decasteljauScript: {fileID: 1483318579}
   pascalScript: {fileID: 1483318580}
-  initialScale: {x: 1, y: 1, z: 1}
-  scaleSensitivity: 0.5
-  deletePoint: 0
 --- !u!1 &1550299377
 GameObject:
   m_ObjectHideFlags: 0

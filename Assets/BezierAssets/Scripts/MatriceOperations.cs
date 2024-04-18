@@ -21,6 +21,7 @@ public class MatriceOperations : MonoBehaviour
     public bool translating = false;
     public bool rotating = false;
     public bool scaling = false;
+    public bool shearing = false;
     private bool isDragging = false;
     public bool deletePoint = false;
 
@@ -47,6 +48,12 @@ public class MatriceOperations : MonoBehaviour
     public Vector3 initialScale = new Vector3(1f, 1f, 1f);
     public float scaleSensitivity = 0.5F;
 
+    [Header("Shearing Settings")]
+    public float shearingSpeed = 5f;
+    private GameObject shearingIconInstance;
+    public GameObject shearingIconPrefab;
+    public Vector3 shearingIconOffset = new Vector3(0f, 0f, 0f);
+
     [Header("Scripts")]
     public PointHandler pointHandler;
     public Casteljau decasteljauScript;
@@ -58,6 +65,8 @@ public class MatriceOperations : MonoBehaviour
 
     private new LineRenderer renderer;
     private List<GameObject> newPoly = new List<GameObject>();
+
+    GameObject parentGO;
     private void Start()
     {
         translateButton.onClick.AddListener(StartTranslation);
@@ -199,18 +208,26 @@ public class MatriceOperations : MonoBehaviour
 
         if (rotating)
         {
-            if (Input.GetMouseButton(0) && selectedObject != null)
+            if (Input.GetMouseButton(0) && selectedObject != null && selectedObject.transform.parent != null)
             {
+                parentGO = selectedObject.transform.parent.gameObject;
                 float rotationAmount = Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
-                selectedObject.transform.Rotate(Vector3.forward, rotationAmount);
+                parentGO.transform.Rotate(Vector3.forward, rotationAmount);
 
                 newPoly = FindPolygon(selectedObject);
                 UpdatePolygon(newPoly);
             }
 
             // Handle keyboard input for rotation
-            float rotationAmountKeyboard = Input.GetAxis("Horizontal") * rotationSpeed * Time.deltaTime;
-            selectedObject.transform.Rotate(Vector3.forward, rotationAmountKeyboard);
+            if (selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+                float rotationAmountKeyboard = Input.GetAxis("Horizontal") * rotationSpeed * Time.deltaTime;
+                parentGO.transform.Rotate(Vector3.forward, rotationAmountKeyboard);
+
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
 
             // Show rotation icon above the selected object
             if (rotationIconPrefab != null && rotationIconInstance == null)
@@ -221,6 +238,8 @@ public class MatriceOperations : MonoBehaviour
             {
                 rotationIconInstance.transform.position = selectedObject.transform.position + rotationIconOffset;
             }
+
+            
         }
         else
         {
@@ -235,19 +254,21 @@ public class MatriceOperations : MonoBehaviour
         if (scaling)
         {
 
-            if (Input.GetMouseButton(0) && selectedObject != null)
+            if (Input.GetMouseButton(0) && selectedObject != null && selectedObject.transform.parent != null)
             {
+                parentGO = selectedObject.transform.parent.gameObject;
+
                 if (!isDragging)
                 {
                     isDragging = true;
                     initialMousePosition = Input.mousePosition;
-                    initialScale = selectedObject.transform.localScale;
+                    initialScale = parentGO.transform.localScale;
                 }
                 else
                 {
                     Vector3 dragDelta = (Input.mousePosition - initialMousePosition) * scalingSpeed * Time.deltaTime;
                     float scalingFactor = 1.0f + dragDelta.magnitude * scaleSensitivity;
-                    selectedObject.transform.localScale = initialScale * scalingFactor;
+                    parentGO.transform.localScale = initialScale * scalingFactor;
 
                     newPoly = FindPolygon(selectedObject);
                     UpdatePolygon(newPoly);
@@ -267,6 +288,29 @@ public class MatriceOperations : MonoBehaviour
             {
                 scalingIconInstance.transform.position = selectedObject.transform.position + scalingIconOffset;
             }
+
+            if (selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+                // scaling logic using keyboard keys 
+                float scalingFctr = 1.0f;
+                if (Input.GetKey(KeyCode.S))
+                {
+                    scalingFctr -= scalingSpeed * Time.deltaTime;
+                    newPoly = FindPolygon(selectedObject);
+                    UpdatePolygon(newPoly);
+                }
+                if (Input.GetKey(KeyCode.W))
+                {
+                    scalingFctr += scalingSpeed * Time.deltaTime;
+                    newPoly = FindPolygon(selectedObject);
+                    UpdatePolygon(newPoly);
+                }
+
+                parentGO.transform.localScale *= scalingFctr;
+            }
+            
+
         }
         else
         {
@@ -276,6 +320,48 @@ public class MatriceOperations : MonoBehaviour
                 Destroy(scalingIconInstance);
                 scalingIconInstance = null;
             }
+        }
+
+        if (shearing)
+        {
+            // Shearing logic using keyboard keys
+            Vector3 shearVector = Vector3.zero;
+            if (Input.GetKey(KeyCode.A))
+            {
+                shearVector += Vector3.left;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                shearVector += Vector3.down;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                shearVector += Vector3.right;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.W))
+            {
+                shearVector += Vector3.up;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+
+            if (shearVector.magnitude > 1f)
+            {
+                shearVector.Normalize();
+            }
+
+            if (selectedObject != null)
+            {
+                Vector3 shearAmount = shearVector * shearingSpeed * Time.deltaTime;
+                selectedObject.transform.position += shearAmount;
+            }
+
         }
 
 
@@ -356,6 +442,7 @@ public class MatriceOperations : MonoBehaviour
         rotating = false;
         deletePoint = false;
         scaling = false;
+        shearing = false;
     }
 
     public void StartTranslation()
@@ -364,6 +451,7 @@ public class MatriceOperations : MonoBehaviour
         rotating = false;
         scaling = false;
         deletePoint = false;
+        shearing = false;
         Debug.Log("Translation started");
     }
 
@@ -373,6 +461,7 @@ public class MatriceOperations : MonoBehaviour
         scaling = false;
         translating = false;
         deletePoint = false;
+        shearing = false;
         Debug.Log("Rotation started");
     }
 
@@ -381,6 +470,7 @@ public class MatriceOperations : MonoBehaviour
         scaling = true;
         rotating = false;
         translating = false;
+        shearing = false;
         deletePoint = false;
         Debug.Log("Scaling started");
     }
@@ -388,6 +478,17 @@ public class MatriceOperations : MonoBehaviour
     public void DeletePoint()
     {
         deletePoint = true;
+        scaling = false;
+        rotating = false;
+        translating = false;
+        shearing = false;
+        print("delele point");
+    }
+
+    public void StartShearing()
+    {
+        shearing = true;
+        deletePoint = false;
         scaling = false;
         rotating = false;
         translating = false;

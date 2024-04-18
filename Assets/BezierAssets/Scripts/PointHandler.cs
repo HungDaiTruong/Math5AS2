@@ -87,6 +87,7 @@ public class PointHandler : MonoBehaviour
             }
         }
     }
+
     public void ClearOne()
     {
         clearOne = true;
