@@ -7,6 +7,8 @@ public class Pascal : MonoBehaviour
     public PointHandler controlPoints;
     public int resolution = 30;
 
+    public LineRenderer lineRenderer;
+
     public Shader lineShader;
     public float stepSize = 0.01f;
     public float stepSizeChangeAmount = 0.001f;
@@ -16,6 +18,19 @@ public class Pascal : MonoBehaviour
     public void ActivatePascal()
     {
         pascal = true;
+    }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            stepSize += stepSizeChangeAmount;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            stepSize -= stepSizeChangeAmount;
+            stepSize = Mathf.Max(stepSize, 0.001f);
+        }
     }
     public void DrawCurve(List<GameObject> controlPointsList, GameObject parent)
     {
@@ -38,7 +53,7 @@ public class Pascal : MonoBehaviour
         GameObject bezierCurveObj = new GameObject("PascalBezierCurve");
         bezierCurveObj.transform.SetParent(parent.transform);
 
-        LineRenderer lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
+        lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;
         lineRenderer.startWidth = 0.3f;
         lineRenderer.endWidth = 0.3f;
@@ -53,6 +68,44 @@ public class Pascal : MonoBehaviour
         lineRenderer.textureMode = LineTextureMode.Tile;
         lineRenderer.numCapVertices = 10;
         lineRenderer.numCornerVertices = 10;
+    }
+
+    public void UpdatePascal(List<GameObject> controlPointsList, GameObject pascalCurveObj)
+    {
+        if (controlPointsList.Count < 2)
+        {
+            Debug.LogError("Se necesitan al menos 2 puntos de control para una curva de Bezier.");
+            return;
+        }
+
+        List<Vector3> curvePoints = new List<Vector3>();
+
+        for (int j = 0; j <= resolution; j++)
+        {
+            float t = (float)j / resolution;
+
+            Vector3 point = CalculateBezierPointUsingPascal(t, controlPointsList);
+            curvePoints.Add(point);
+        }
+
+        lineRenderer = pascalCurveObj.GetComponent<LineRenderer>();
+        lineRenderer.positionCount = curvePoints.Count;
+        lineRenderer.startWidth = 0.3f;
+        lineRenderer.endWidth = 0.3f;
+        lineRenderer.startColor = controlPoints.currentColor;
+        lineRenderer.endColor = controlPoints.currentColor;
+        lineRenderer.SetPositions(curvePoints.ToArray());
+
+
+        Material lineMaterial = new Material(lineShader);
+
+        lineRenderer.material = lineMaterial;
+        lineRenderer.textureMode = LineTextureMode.Tile;
+        lineRenderer.numCapVertices = 10;
+        lineRenderer.numCornerVertices = 10;
+
+
+        lineRenderer.sortingOrder = 0;
     }
 
     private Vector3 CalculateBezierPointUsingPascal(float t, List<GameObject> points)

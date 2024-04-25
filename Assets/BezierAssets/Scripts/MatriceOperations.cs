@@ -168,11 +168,19 @@ public class MatriceOperations : MonoBehaviour
         DecasteljauCurveObj = DecasteljauCurveIsPresent(AselectedObject.transform.parent.gameObject);
         if (DecasteljauCurveObj != null)
         {
-            print("curve present");
+            if(DecasteljauCurveObj.name == "CasteljauBezierCurve")
+            {
+                print("curve present");
                 decasteljauScript.UpdateDecasteljau(newPoly, DecasteljauCurveObj);
                 print("casteljau function worked");
-            
-        } else
+            }else if (DecasteljauCurveObj.name == "PascalBezierCurve")
+            {
+                print("curve present");
+                pascalScript.UpdatePascal(newPoly, DecasteljauCurveObj);
+                print("casteljau function worked");
+            }
+        }
+        else
         {
             print("curve not present");
         }
@@ -184,7 +192,7 @@ public class MatriceOperations : MonoBehaviour
         foreach (Transform child in parent.transform)
         {
             // Check if the name of the current child matches the specified name
-            if (child.gameObject.name == "CasteljauBezierCurve")
+            if (child.gameObject.name == "CasteljauBezierCurve" || child.gameObject.name == "PascalBezierCurve")
             {
                 return child.gameObject;
             }
