@@ -44,6 +44,8 @@ public class Pascal : MonoBehaviour
         GameObject bezierCurveObj = new GameObject("PascalBezierCurve");
         curve = bezierCurveObj;
         bezierCurveObj.transform.SetParent(parent.transform);
+        bezierCurveObj.transform.SetSiblingIndex(0);
+
 
         lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;

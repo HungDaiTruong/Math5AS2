@@ -71,6 +71,8 @@ public class Casteljau : MonoBehaviour
         GameObject bezierCurveObj = new GameObject("CasteljauBezierCurve");
         curve = bezierCurveObj;
         bezierCurveObj.transform.SetParent(parent.transform);
+        bezierCurveObj.transform.SetSiblingIndex(0);
+
         BezierLineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
 
         BezierLineRenderer.positionCount = curvePoints.Count;
