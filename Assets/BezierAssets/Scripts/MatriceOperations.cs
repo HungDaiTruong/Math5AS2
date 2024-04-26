@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,6 +9,7 @@ using UnityEngine.UI;
 
 public class MatriceOperations : MonoBehaviour
 {
+    [Header("UI Settings")]
     public GameObject menuCanvas;
     public Button translateButton;
     public Button rotateButton;
@@ -15,26 +17,56 @@ public class MatriceOperations : MonoBehaviour
     private Vector3 initialMousePosition;
     private Vector3 initialGameObjectPosition;
 
+    [Header("Debugging variables")]
     public bool translating = false;
+    public bool rotating = false;
+    public bool scaling = false;
+    public bool shearing = false;
     private bool isDragging = false;
+    public bool deletePoint = false;
 
     private GameObject selectedObject;
     private Vector3 lastMousePosition;
 
+    [Header("Translation Settings")]
     public float translationSpeed = 5f;
     private GameObject translationIconInstance;
-    public GameObject translationIconPrefab; 
+    public GameObject translationIconPrefab;
     public Vector3 translationIconOffset = new Vector3(5f, 5f, 0f);
 
+    [Header("Rotation Settings")]
+    public float rotationSpeed = 5f;
+    private GameObject rotationIconInstance;
+    public GameObject rotationIconPrefab;
+    public Vector3 rotationIconOffset = new Vector3(0f, 0f, 0f);
+
+    [Header("Scaling Settings")]
+    public float scalingSpeed = 5f;
+    private GameObject scalingIconInstance;
+    public GameObject scalingIconPrefab;
+    public Vector3 scalingIconOffset = new Vector3(5f, 5f, 0f);
+    public Vector3 initialScale = new Vector3(1f, 1f, 1f);
+    public float scaleSensitivity = 0.5F;
+
+    [Header("Shearing Settings")]
+    public float shearingSpeed = 5f;
+    private GameObject shearingIconInstance;
+    public GameObject shearingIconPrefab;
+    public Vector3 shearingIconOffset = new Vector3(0f, 0f, 0f);
+
+    [Header("Scripts")]
     public PointHandler pointHandler;
+    public Casteljau decasteljauScript;
+    public Pascal pascalScript;
+
+
+    private GameObject BezierCurveObj;
+
 
     private new LineRenderer renderer;
     private List<GameObject> newPoly = new List<GameObject>();
 
-    public Casteljau decasteljauScript;
-    public Pascal pascalScript;
-
-    private GameObject DecasteljauCurveObj;
+    GameObject parentGO;
     private void Start()
     {
         translateButton.onClick.AddListener(StartTranslation);
@@ -72,8 +104,26 @@ public class MatriceOperations : MonoBehaviour
             }
         }
 
+        if (deletePoint)
+        {
+            rotating = false;
+            translating = false;
+            scaling = false;
+
+            if (Input.GetMouseButton(0) && selectedObject != null)
+            {
+                newPoly = FindPolygon(selectedObject);
+                Destroy(selectedObject);
+                newPoly.Remove(selectedObject);
+                UpdatePolygon(newPoly);
+
+                selectedObject = null;
+            }
+        }
+
         if (translating)
         {
+           
             if (Input.GetMouseButton(0) && selectedObject != null)
             {
                 Vector3 currentMousePosition = Input.mousePosition;
@@ -83,10 +133,13 @@ public class MatriceOperations : MonoBehaviour
 
                 lastMousePosition = currentMousePosition;
 
-                UpdatePolygon(selectedObject);
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+
 
             }
 
+            if (selectedObject != null) { 
             if (Input.GetMouseButtonUp(0))
             {
                 isDragging = false;
@@ -103,22 +156,26 @@ public class MatriceOperations : MonoBehaviour
             if (Input.GetKey(KeyCode.A))
             {
                 translationVector += Vector3.left;
-                UpdatePolygon(selectedObject);
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
             }
             if (Input.GetKey(KeyCode.S))
             {
                 translationVector += Vector3.down;
-                UpdatePolygon(selectedObject);
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
             }
             if (Input.GetKey(KeyCode.D))
             {
                 translationVector += Vector3.right;
-                UpdatePolygon(selectedObject);
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
             }
             if (Input.GetKey(KeyCode.W))
             {
                 translationVector += Vector3.up;
-                UpdatePolygon(selectedObject);
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
             }
 
             if (translationVector.magnitude > 1f)
@@ -137,9 +194,9 @@ public class MatriceOperations : MonoBehaviour
             {
                 translationIconInstance.transform.position = selectedObject.transform.position + translationIconOffset;
             }
-        }
 
-        else
+            }
+        } else
         {
             // Destroy translation icon when not in translation mode or no selected object
             if (translationIconInstance != null)
@@ -148,13 +205,172 @@ public class MatriceOperations : MonoBehaviour
                 translationIconInstance = null;
             }
         }
+
+        if (rotating)
+        {
+            if (Input.GetMouseButton(0) && selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+                float rotationAmount = Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
+                parentGO.transform.Rotate(Vector3.forward, rotationAmount);
+
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+
+            // Handle keyboard input for rotation
+            if (selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+                float rotationAmountKeyboard = Input.GetAxis("Horizontal") * rotationSpeed * Time.deltaTime;
+                parentGO.transform.Rotate(Vector3.forward, rotationAmountKeyboard);
+
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+
+            // Show rotation icon above the selected object
+            if (rotationIconPrefab != null && rotationIconInstance == null)
+            {
+                rotationIconInstance = Instantiate(rotationIconPrefab, selectedObject.transform.position + rotationIconOffset, Quaternion.identity);
+            }
+            else if (rotationIconInstance != null)
+            {
+                rotationIconInstance.transform.position = selectedObject.transform.position + rotationIconOffset;
+            }
+
+            
+        }
+        else
+        {
+            // Destroy rotation icon when not in rotation mode or no selected object
+            if (rotationIconInstance != null)
+            {
+                Destroy(rotationIconInstance);
+                rotationIconInstance = null;
+            }
+        }
+
+        if (scaling)
+        {
+
+            if (Input.GetMouseButton(0) && selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+
+                if (!isDragging)
+                {
+                    isDragging = true;
+                    initialMousePosition = Input.mousePosition;
+                    initialScale = parentGO.transform.localScale;
+                }
+                else
+                {
+                    Vector3 dragDelta = (Input.mousePosition - initialMousePosition) * scalingSpeed * Time.deltaTime;
+                    float scalingFactor = 1.0f + dragDelta.magnitude * scaleSensitivity;
+                    parentGO.transform.localScale = initialScale * scalingFactor;
+
+                    newPoly = FindPolygon(selectedObject);
+                    UpdatePolygon(newPoly);
+                }
+            }
+            else
+            {
+                isDragging = false;
+            }
+
+            // Show scaling icon above the selected object
+            if (scalingIconPrefab != null && scalingIconInstance == null)
+            {
+                scalingIconInstance = Instantiate(scalingIconPrefab, selectedObject.transform.position + scalingIconOffset, Quaternion.identity);
+            }
+            else if (scalingIconInstance != null)
+            {
+                scalingIconInstance.transform.position = selectedObject.transform.position + scalingIconOffset;
+            }
+
+            if (selectedObject != null && selectedObject.transform.parent != null)
+            {
+                parentGO = selectedObject.transform.parent.gameObject;
+                // scaling logic using keyboard keys 
+                float scalingFctr = 1.0f;
+                if (Input.GetKey(KeyCode.S))
+                {
+                    scalingFctr -= scalingSpeed * Time.deltaTime;
+                    newPoly = FindPolygon(selectedObject);
+                    UpdatePolygon(newPoly);
+                }
+                if (Input.GetKey(KeyCode.W))
+                {
+                    scalingFctr += scalingSpeed * Time.deltaTime;
+                    newPoly = FindPolygon(selectedObject);
+                    UpdatePolygon(newPoly);
+                }
+
+                parentGO.transform.localScale *= scalingFctr;
+            }
+            
+
+        }
+        else
+        {
+            // Destroy scaling icon when not in scaling mode or no selected object
+            if (scalingIconInstance != null)
+            {
+                Destroy(scalingIconInstance);
+                scalingIconInstance = null;
+            }
+        }
+
+        if (shearing)
+        {
+            // Shearing logic using keyboard keys
+            Vector3 shearVector = Vector3.zero;
+            if (Input.GetKey(KeyCode.A))
+            {
+                shearVector += Vector3.left;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                shearVector += Vector3.down;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                shearVector += Vector3.right;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+            if (Input.GetKey(KeyCode.W))
+            {
+                shearVector += Vector3.up;
+                newPoly = FindPolygon(selectedObject);
+                UpdatePolygon(newPoly);
+            }
+
+            if (shearVector.magnitude > 1f)
+            {
+                shearVector.Normalize();
+            }
+
+            if (selectedObject != null)
+            {
+                Vector3 shearAmount = shearVector * shearingSpeed * Time.deltaTime;
+                selectedObject.transform.position += shearAmount;
+            }
+
+        }
+
+
     }
 
-    private void UpdatePolygon(GameObject AselectedObject)
+    private void UpdatePolygon(List<GameObject> selectedPolygon)
     {
         //pour modifier les lignes du polygone
-        newPoly = FindPolygon(AselectedObject);
-        renderer = AselectedObject.transform.parent.GetComponent<LineRenderer>();
+        renderer = selectedObject.transform.parent.GetComponent<LineRenderer>();
 
         renderer.positionCount = newPoly.Count;
         for (int i = 0; i < newPoly.Count; i++)
@@ -164,34 +380,34 @@ public class MatriceOperations : MonoBehaviour
         }
         renderer.sortingOrder = 1; 
 
-        //modifier la courbe
-        DecasteljauCurveObj = DecasteljauCurveIsPresent(AselectedObject.transform.parent.gameObject);
-        if (DecasteljauCurveObj != null)
+        //pour modifier la courbe
+        BezierCurveObj = BezierCurveIsPresent(selectedObject.transform.parent.gameObject);
+        if (BezierCurveObj != null)
         {
-            if(DecasteljauCurveObj.name == "CasteljauBezierCurve")
+
+            print("curve present");
+            if (BezierCurveObj.name == "CasteljauBezierCurve")
             {
-                print("curve present");
-                decasteljauScript.UpdateDecasteljau(newPoly, DecasteljauCurveObj);
+                decasteljauScript.UpdateDecasteljau(newPoly, BezierCurveObj);
                 print("casteljau function worked");
-            }else if (DecasteljauCurveObj.name == "PascalBezierCurve")
+            } else if (BezierCurveObj.name == "PascalBezierCurve")
             {
-                print("curve present");
-                pascalScript.UpdatePascal(newPoly, DecasteljauCurveObj);
-                print("casteljau function worked");
+                pascalScript.UpdateCurve(newPoly, BezierCurveObj);
+                print("pascal function worked");
             }
-        }
-        else
+                
+            
+        } else
         {
             print("curve not present");
         }
         
     }
 
-    private GameObject DecasteljauCurveIsPresent(GameObject parent)
+    private GameObject BezierCurveIsPresent(GameObject parent)
     {
         foreach (Transform child in parent.transform)
         {
-            // Check if the name of the current child matches the specified name
             if (child.gameObject.name == "CasteljauBezierCurve" || child.gameObject.name == "PascalBezierCurve")
             {
                 return child.gameObject;
@@ -224,18 +440,59 @@ public class MatriceOperations : MonoBehaviour
     {
         menuCanvas.SetActive(false);
         translating= false;
+        rotating = false;
+        deletePoint = false;
+        scaling = false;
+        shearing = false;
     }
 
     public void StartTranslation()
     {
-        translating=true;
-        // Implement translation logic here
+        translating=true; 
+        rotating = false;
+        scaling = false;
+        deletePoint = false;
+        shearing = false;
         Debug.Log("Translation started");
     }
 
-    private void StartRotation()
+    public void StartRotation()
     {
-        // Implement rotation logic here
+        rotating = true;
+        scaling = false;
+        translating = false;
+        deletePoint = false;
+        shearing = false;
         Debug.Log("Rotation started");
+    }
+
+    public void StartScale()
+    {
+        scaling = true;
+        rotating = false;
+        translating = false;
+        shearing = false;
+        deletePoint = false;
+        Debug.Log("Scaling started");
+    }
+
+    public void DeletePoint()
+    {
+        deletePoint = true;
+        scaling = false;
+        rotating = false;
+        translating = false;
+        shearing = false;
+        print("delele point");
+    }
+
+    public void StartShearing()
+    {
+        shearing = true;
+        deletePoint = false;
+        scaling = false;
+        rotating = false;
+        translating = false;
+        print("delele point");
     }
 }
