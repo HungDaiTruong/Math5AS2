@@ -436,7 +436,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Move
+  m_text: C1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -630,7 +630,7 @@ GameObject:
   - component: {fileID: 132896171}
   - component: {fileID: 132896170}
   m_Layer: 5
-  m_Name: BtnStep
+  m_Name: BtnC0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -699,7 +699,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 132896171}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: SetLinkType
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: StartCheckingPolygon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &132896171
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -978,7 +1002,7 @@ GameObject:
   - component: {fileID: 202803508}
   - component: {fileID: 202803507}
   m_Layer: 5
-  m_Name: BtnFill
+  m_Name: BtnC2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1048,6 +1072,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: SetLinkType
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 1483318577}
         m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
         m_MethodName: StartCheckingPolygon
@@ -4808,6 +4844,8 @@ MonoBehaviour:
   decasteljauScript: {fileID: 1483318579}
   pascalScript: {fileID: 1483318580}
   clearOne: 0
+  isLinking: 0
+  linkType: 0
 --- !u!4 &1483318578
 Transform:
   m_ObjectHideFlags: 0
@@ -5267,7 +5305,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Step
+  m_text: C0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -5772,7 +5810,7 @@ GameObject:
   - component: {fileID: 1982039064}
   - component: {fileID: 1982039063}
   m_Layer: 5
-  m_Name: BtnMove
+  m_Name: BtnC1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5841,7 +5879,31 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1982039064}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: SetLinkType
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1483318577}
+        m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
+        m_MethodName: StartCheckingPolygon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1982039064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5937,7 +5999,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Fill
+  m_text: C2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

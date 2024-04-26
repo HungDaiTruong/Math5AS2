@@ -384,6 +384,7 @@ public class MatriceOperations : MonoBehaviour
         BezierCurveObj = BezierCurveIsPresent(selectedObject.transform.parent.gameObject);
         if (BezierCurveObj != null)
         {
+
             print("curve present");
             if (BezierCurveObj.name == "CasteljauBezierCurve")
             {

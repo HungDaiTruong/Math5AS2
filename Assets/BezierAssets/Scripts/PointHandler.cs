@@ -19,6 +19,9 @@ public class PointHandler : MonoBehaviour
     public Pascal pascalScript;
     public bool clearOne = false;
 
+    public bool isLinking = false;
+    public int linkType;
+
     void Update()
     {
         // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
@@ -67,12 +70,31 @@ public class PointHandler : MonoBehaviour
                     decasteljauScript.decasteljau = false;
                     print("casteljau function worked");
 
-                } else if (pascalScript.pascal)
+                } 
+                else if (pascalScript.pascal)
                 {
                     pascalScript.DrawCurve(polygonPoints, insidePolygon);
                     pascalScript.pascal = false;
                     print("pascal function worked");
-                } else if(clearOne)
+                }
+                else if (isLinking)
+                {
+                    if(linkType == 0)
+                    {
+                        C0Link(polygonPoints);
+                    }
+                    else if(linkType == 1)
+                    {
+                        C1Link(polygonPoints);
+                    }
+                    else if(linkType == 2)
+                    {
+                        C2Link(polygonPoints);
+                    }
+                    isLinking = false;
+                    drawing = true;
+                }
+                else if(clearOne)
                 {
                     Destroy(insidePolygon);
                     clearOne = false;
@@ -229,5 +251,94 @@ public class PointHandler : MonoBehaviour
             }
         }
         return inside;
+    }
+
+    // Méthode pour le raccordement C0
+    public void C0Link(List<GameObject> polygonPoints)
+    {
+        // Créer un nouveau point au même emplacement que le dernier point du polygone existant
+        GameObject newPoint = Instantiate(pointPrefab, polygonPoints[polygonPoints.Count - 1].transform.position, Quaternion.identity);
+        newPoint.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+        newPoint.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du nouveau point
+        points.Add(newPoint); // Ajouter le point à la liste des points
+    }
+
+    // Méthode pour le raccordement C1
+    public void C1Link(List<GameObject> polygonPoints)
+    {
+        // Créer deux nouveaux points
+        GameObject newPoint1 = Instantiate(pointPrefab, polygonPoints[polygonPoints.Count - 1].transform.position, Quaternion.identity);
+        GameObject newPoint2 = Instantiate(pointPrefab, CalculateC1Position(polygonPoints), Quaternion.identity);
+
+        newPoint1.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+        newPoint2.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+
+        newPoint1.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du premier nouveau point
+        newPoint2.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du deuxième nouveau point
+
+        points.Add(newPoint1); // Ajouter le premier nouveau point à la liste des points
+        points.Add(newPoint2); // Ajouter le deuxième nouveau point à la liste des points
+    }
+
+    // Méthode pour le raccordement C2
+    public void C2Link(List<GameObject> polygonPoints)
+    {
+        // Créer trois nouveaux points
+        GameObject newPoint1 = Instantiate(pointPrefab, polygonPoints[polygonPoints.Count - 1].transform.position, Quaternion.identity);
+        GameObject newPoint2 = Instantiate(pointPrefab, CalculateC1Position(polygonPoints), Quaternion.identity);
+        GameObject newPoint3 = Instantiate(pointPrefab, CalculateC2Position(polygonPoints), Quaternion.identity);
+
+        newPoint1.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+        newPoint2.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+        newPoint3.tag = "controlPoint"; // Ajouter le tag "controlPoint"
+
+        newPoint1.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du premier nouveau point
+        newPoint2.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du deuxième nouveau point
+        newPoint3.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du troisième nouveau point
+
+        points.Add(newPoint1); // Ajouter le premier nouveau point à la liste des points
+        points.Add(newPoint2); // Ajouter le deuxième nouveau point à la liste des points
+        points.Add(newPoint3); // Ajouter le troisième nouveau point à la liste des points
+    }
+
+    // Méthode pour calculer la position du deuxième point pour le raccordement C1
+    private Vector3 CalculateC1Position(List<GameObject> polygonPoints)
+    {
+        // Obtenir la position du dernier point du polygone
+        Vector3 lastPointPosition = polygonPoints[polygonPoints.Count - 1].transform.position;
+
+        // Obtenir la position du deuxième dernier point du polygone
+        Vector3 secondLastPointPosition = polygonPoints[polygonPoints.Count - 2].transform.position;
+
+        // Calculer la position du deuxième nouveau point
+        // P1' = P0' + (Pn - Pn-1) -> Miroir du point Pn-1
+        Vector3 c1Position = lastPointPosition + (lastPointPosition - secondLastPointPosition);
+
+        return c1Position;
+    }
+
+    // Méthode pour calculer la position du troisième point pour le raccordement C2
+    private Vector3 CalculateC2Position(List<GameObject> polygonPoints)
+    {
+        // Obtenir la position du dernier point du polygone
+        Vector3 lastPointPosition = polygonPoints[polygonPoints.Count - 1].transform.position;
+
+        // Obtenir la position du deuxième dernier point du polygone
+        Vector3 secondLastPointPosition = polygonPoints[polygonPoints.Count - 2].transform.position;
+
+        // Obtenir la position du troisième dernier point du polygone
+        Vector3 thirdLastPointPosition = polygonPoints[polygonPoints.Count - 3].transform.position;
+
+        // Calculer la position du troisième nouveau point
+        // P2' = Pn+2 + 2*(P1' - Pn-1) -> Miroir des points Pn-1 et Pn-2
+        Vector3 c2Position = lastPointPosition + (lastPointPosition - secondLastPointPosition) + (lastPointPosition - 2 * secondLastPointPosition + thirdLastPointPosition);
+
+        return c2Position;
+    }
+
+    public void SetLinkType(int type)
+    {
+        isLinking = true;
+        linkType = type;
     }
 }

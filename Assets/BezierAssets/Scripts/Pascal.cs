@@ -6,6 +6,8 @@ public class Pascal : MonoBehaviour
 {
     public PointHandler controlPoints;
 
+    public LineRenderer lineRenderer;
+
     public Shader lineShader;
 
     public bool pascal = false;
@@ -17,6 +19,19 @@ public class Pascal : MonoBehaviour
     public void ActivatePascal()
     {
         pascal = true;
+    }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            stepSize += stepSizeChangeAmount;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            stepSize -= stepSizeChangeAmount;
+            stepSize = Mathf.Max(stepSize, 0.001f);
+        }
     }
     public void DrawCurve(List<GameObject> controlPointsList, GameObject parent)
     {
@@ -43,7 +58,7 @@ public class Pascal : MonoBehaviour
         curve = bezierCurveObj;
         bezierCurveObj.transform.SetParent(parent.transform);
 
-        LineRenderer lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
+        lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;
         lineRenderer.startWidth = 0.3f;
         lineRenderer.endWidth = 0.3f;
@@ -83,6 +98,7 @@ public class Pascal : MonoBehaviour
 
         curve = bezierCurveObj;
         LineRenderer lineRenderer = bezierCurveObj.GetComponent<LineRenderer>();
+
         lineRenderer.positionCount = curvePoints.Count;
         lineRenderer.startWidth = 0.3f;
         lineRenderer.endWidth = 0.3f;
@@ -97,6 +113,7 @@ public class Pascal : MonoBehaviour
         lineRenderer.textureMode = LineTextureMode.Tile;
         lineRenderer.numCapVertices = 10;
         lineRenderer.numCornerVertices = 10;
+
     }
 
     public void UpdateStep()
