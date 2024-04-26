@@ -48,8 +48,8 @@ public class Pascal : MonoBehaviour
 
         lineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = curvePoints.Count;
-        lineRenderer.startWidth = 0.1f;
-        lineRenderer.endWidth = 0.1f;
+        lineRenderer.startWidth = 0.05f;
+        lineRenderer.endWidth = 0.05f;
         lineRenderer.startColor = controlPoints.currentColor;
         lineRenderer.endColor = controlPoints.currentColor;
         lineRenderer.SetPositions(curvePoints.ToArray());
@@ -91,8 +91,8 @@ public class Pascal : MonoBehaviour
         LineRenderer lineRenderer = bezierCurveObj.GetComponent<LineRenderer>();
 
         lineRenderer.positionCount = curvePoints.Count;
-        lineRenderer.startWidth = 0.1f;
-        lineRenderer.endWidth = 0.1f;
+        lineRenderer.startWidth = 0.05f;
+        lineRenderer.endWidth = 0.05f;
         lineRenderer.startColor = controlPoints.currentColor;
         lineRenderer.endColor = controlPoints.currentColor;
         lineRenderer.SetPositions(curvePoints.ToArray());
@@ -135,8 +135,8 @@ public class Pascal : MonoBehaviour
 
             LineRenderer lineRenderer = curve.GetComponent<LineRenderer>();
             lineRenderer.positionCount = curvePoints.Count;
-            lineRenderer.startWidth = 0.1f;
-            lineRenderer.endWidth = 0.1f;
+            lineRenderer.startWidth = 0.05f;
+            lineRenderer.endWidth = 0.05f;
             lineRenderer.startColor = controlPoints.currentColor;
             lineRenderer.endColor = controlPoints.currentColor;
             lineRenderer.SetPositions(curvePoints.ToArray());
