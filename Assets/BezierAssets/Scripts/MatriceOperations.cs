@@ -11,6 +11,7 @@ public class MatriceOperations : MonoBehaviour
 {
     [Header("UI Settings")]
     public GameObject menuCanvas;
+    public GameObject menuCanvasFill;
     public Button translateButton;
     public Button rotateButton;
 
@@ -87,6 +88,7 @@ public class MatriceOperations : MonoBehaviour
                 if (hit.collider.gameObject.CompareTag("controlPoint"))
                 {
                     ShowMenu();
+                    menuCanvasFill.SetActive(false);
                     initialMousePosition = Input.mousePosition;
                     initialGameObjectPosition = hit.transform.position;
                     selectedObject = hit.collider.gameObject;

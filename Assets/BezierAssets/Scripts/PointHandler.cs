@@ -17,6 +17,7 @@ public class PointHandler : MonoBehaviour
 
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
+    public Drawing drawable;
     public bool clearOne = false;
 
     public bool isLinking = false;
