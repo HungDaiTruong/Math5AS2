@@ -222,9 +222,20 @@ public class MatriceOperations : MonoBehaviour
             if (selectedObject != null && selectedObject.transform.parent != null)
             {
                 parentGO = selectedObject.transform.parent.gameObject;
-                float rotationAmountKeyboard = Input.GetAxis("Horizontal") * rotationSpeed * Time.deltaTime;
-                parentGO.transform.Rotate(Vector3.forward, rotationAmountKeyboard);
 
+                GameObject[] points = new GameObject[parentGO.transform.childCount];
+                for (int i = 0; i < parentGO.transform.childCount; i++)
+                {
+                    points[i] = parentGO.transform.GetChild(i).gameObject;
+                }
+
+                Vector3 barycenter = CalculateBarycenter(points);
+
+                float rotationAmountKeyboard = Input.GetAxis("Horizontal") * rotationSpeed * Time.deltaTime;
+
+
+                parentGO.transform.RotateAround(barycenter, Vector3.forward, rotationAmountKeyboard);
+                
                 newPoly = FindPolygon(selectedObject);
                 UpdatePolygon(newPoly);
             }
@@ -365,6 +376,17 @@ public class MatriceOperations : MonoBehaviour
         }
 
 
+    }
+
+    private Vector3 CalculateBarycenter(GameObject[] points)
+    {
+        Vector3 barycenter = Vector3.zero;
+        foreach (GameObject point in points)
+        {
+            barycenter += point.transform.position;
+        }
+        barycenter /= points.Length;
+        return barycenter;
     }
 
     private void UpdatePolygon(List<GameObject> selectedPolygon)

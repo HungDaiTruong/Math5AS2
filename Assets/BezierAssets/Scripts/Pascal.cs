@@ -20,19 +20,6 @@ public class Pascal : MonoBehaviour
     {
         pascal = true;
     }
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            stepSize += stepSizeChangeAmount;
-        }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            stepSize -= stepSizeChangeAmount;
-            stepSize = Mathf.Max(stepSize, 0.001f);
-        }
-    }
     public void DrawCurve(List<GameObject> controlPointsList, GameObject parent)
     {
         points = controlPointsList;
