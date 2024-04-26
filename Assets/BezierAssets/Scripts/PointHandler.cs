@@ -133,8 +133,8 @@ public class PointHandler : MonoBehaviour
         // Ajouter un composant LineRenderer pour dessiner les lignes
         LineRenderer lineRenderer = polygonObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = currentPoints.Count; // Définir le nombre de positions
-        lineRenderer.startWidth = 0.05f; // Définir la largeur de la ligne
-        lineRenderer.endWidth = 0.05f;
+        lineRenderer.startWidth = 0.02f; // Définir la largeur de la ligne
+        lineRenderer.endWidth = 0.02f;
         lineRenderer.loop = true; // Relier le dernier point au premier point
 
         // Définir la couleur de la ligne pour correspondre à la couleur des points
