@@ -187,6 +187,22 @@ public class Casteljau : MonoBehaviour
             pointHandler.drawable.paintInPixels(curvePoints);
         }
     }
+
+    public List<Vector3> GetCurvePoints(List<GameObject> controlPoints)
+    {
+        int numPoints = Mathf.CeilToInt(1f / stepSize);
+        List<Vector3> curvePoints = new List<Vector3>();
+
+        for (int i = 0; i < numPoints; i++)
+        {
+            float t = i * stepSize;
+            Vector3 point = CalculateBezierPoint(t, controlPoints);
+            curvePoints.Add(point);
+        }
+
+        return curvePoints;
+    }
+
     private Vector3 CalculateBezierPoint(float t, List<GameObject> controlPoints)
     {
         int numPoints = controlPoints.Count;

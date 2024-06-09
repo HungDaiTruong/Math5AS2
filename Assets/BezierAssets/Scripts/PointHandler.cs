@@ -23,6 +23,9 @@ public class PointHandler : MonoBehaviour
     public bool isLinking = false;
     public int linkType;
 
+    public GameObject extrusionPrefab;
+    private bool isExtruding = false;
+
     void Update()
     {
         // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
@@ -71,12 +74,29 @@ public class PointHandler : MonoBehaviour
                     decasteljauScript.decasteljau = false;
                     print("casteljau function worked");
 
-                } 
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                }
                 else if (pascalScript.pascal)
                 {
                     pascalScript.DrawCurve(polygonPoints, insidePolygon);
                     pascalScript.pascal = false;
                     print("pascal function worked");
+
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = pascalScript.GetCurvePoints(polygonPoints);
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                }
+                else if (isExtruding)
+                {
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                        decasteljauScript.GetCurvePoints(polygonPoints) :
+                        pascalScript.GetCurvePoints(polygonPoints);
+
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                    isExtruding = false; // Reset the flag after extrusion
                 }
                 else if (isLinking)
                 {
@@ -111,9 +131,25 @@ public class PointHandler : MonoBehaviour
         }
     }
 
+    private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
+    {
+        // Create the extrusion object from the prefab
+        GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        // Get the ExtrudeBezier component and update the extrusion
+        Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
+        extrusionScript.UpdateExtrusion(curvePoints, currentColor, parent);
+    }
+
     public void ClearOne()
     {
         clearOne = true;
+    }
+
+    // Method to activate extrusion mode
+    public void ActivateExtrusion()
+    {
+        isExtruding = true;
     }
 
     // Méthode pour connecter les points pour former un polygone

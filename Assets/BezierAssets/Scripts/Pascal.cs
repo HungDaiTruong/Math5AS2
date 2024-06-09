@@ -178,6 +178,21 @@ public class Pascal : MonoBehaviour
         return result;
     }
 
+    public List<Vector3> GetCurvePoints(List<GameObject> controlPointsList)
+    {
+        int numPoints = Mathf.CeilToInt(1f / casteljauScript.stepSize);
+        List<Vector3> curvePoints = new List<Vector3>();
+
+        for (int j = 0; j <= numPoints; j++)
+        {
+            float t = j * casteljauScript.stepSize;
+            Vector3 point = CalculateBezierPointUsingPascal(t, controlPointsList);
+            curvePoints.Add(point);
+        }
+
+        return curvePoints;
+    }
+
     private List<int> CalculateBinomialCoefficients(int n)
     {
         List<int> coefficients = new List<int>();
