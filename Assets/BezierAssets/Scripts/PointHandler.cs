@@ -17,11 +17,16 @@ public class PointHandler : MonoBehaviour
 
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
+    public Drawing drawable;
     public bool clearOne = false;
 
     public bool isLinking = false;
     public int linkType;
 
+    public GameObject extrusionPrefab;
+    public GameObject extrusionAxePrefab;
+    private bool isExtruding = false;
+    public float extrusionLength = 5f;
     void Update()
     {
         // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
@@ -46,6 +51,7 @@ public class PointHandler : MonoBehaviour
             ConnectPoints(currentPoints); // Connecter les points pour former un polygone
             courbes.Add(currentPoints);
         }
+       
 
         // Vérifier si la vérification des polygones est active et si le clic gauche de la souris est enfoncé
         if (isCheckingPolygon && Input.GetMouseButtonDown(0) && !IsPointerOverUIObject())
@@ -63,19 +69,40 @@ public class PointHandler : MonoBehaviour
                 {
                     polygonPoints.Add(child.gameObject);
                 }
-
+                
                 if (decasteljauScript.decasteljau)
                 {
                     decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
                     decasteljauScript.decasteljau = false;
                     print("casteljau function worked");
 
-                } 
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                    CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                    //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+                }
                 else if (pascalScript.pascal)
                 {
                     pascalScript.DrawCurve(polygonPoints, insidePolygon);
                     pascalScript.pascal = false;
                     print("pascal function worked");
+
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = pascalScript.GetCurvePoints(polygonPoints);
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                    CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                    //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+                }
+                else if (isExtruding)
+                {
+                    // Extrude the curve in 3D
+                    List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                        decasteljauScript.GetCurvePoints(polygonPoints) :
+                        pascalScript.GetCurvePoints(polygonPoints);
+
+                    CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                    isExtruding = false; // Reset the flag after extrusion
                 }
                 else if (isLinking)
                 {
@@ -101,18 +128,50 @@ public class PointHandler : MonoBehaviour
                     lines.Remove(insidePolygon); 
                     //need to add : delete the polygon from 'courbes'
                     print("cleared one polygon");
-                } 
+                }
+                if (Input.GetKey(KeyCode.Z))
+                {
+                    List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                        decasteljauScript.GetCurvePoints(polygonPoints) :
+                        pascalScript.GetCurvePoints(polygonPoints);
+                    Debug.Log("Clic z.");
+                    CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                }
             }
             else
             {
                 Debug.Log("Clic à l'extérieur de tous les polygones.");
             }
+            
         }
     }
+    private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent)
+    {
+        // Create the extrusion object from the prefab
+        GameObject extrusionAxe = Instantiate(extrusionAxePrefab);
 
+        // Get the ExtrudeBezier component and update the extrusion
+        ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
+        extrusionaxe.ExtrudeSurAxe(polygonPoints,parent);
+    }
+    private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
+    {
+        // Create the extrusion object from the prefab
+        GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        // Get the ExtrudeBezier component and update the extrusion
+        Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
+        extrusionScript.UpdateExtrusion(curvePoints, currentColor, parent);
+    }
     public void ClearOne()
     {
         clearOne = true;
+    }
+
+    // Method to activate extrusion mode
+    public void ActivateExtrusion()
+    {
+        isExtruding = true;
     }
 
     // Méthode pour connecter les points pour former un polygone
@@ -132,8 +191,8 @@ public class PointHandler : MonoBehaviour
         // Ajouter un composant LineRenderer pour dessiner les lignes
         LineRenderer lineRenderer = polygonObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = currentPoints.Count; // Définir le nombre de positions
-        lineRenderer.startWidth = 0.1f; // Définir la largeur de la ligne
-        lineRenderer.endWidth = 0.1f;
+        lineRenderer.startWidth = 0.02f; // Définir la largeur de la ligne
+        lineRenderer.endWidth = 0.02f;
         lineRenderer.loop = true; // Relier le dernier point au premier point
 
         // Définir la couleur de la ligne pour correspondre à la couleur des points
