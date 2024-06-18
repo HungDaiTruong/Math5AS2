@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using Unity.Burst.CompilerServices;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
@@ -11,6 +14,7 @@ public class MatriceOperations : MonoBehaviour
 {
     [Header("UI Settings")]
     public GameObject menuCanvas;
+    public GameObject menuCanvasFill;
     public Button translateButton;
     public Button rotateButton;
 
@@ -22,6 +26,7 @@ public class MatriceOperations : MonoBehaviour
     public bool rotating = false;
     public bool scaling = false;
     public bool shearing = false;
+    public bool multiply = false;
     private bool isDragging = false;
     public bool deletePoint = false;
 
@@ -87,6 +92,7 @@ public class MatriceOperations : MonoBehaviour
                 if (hit.collider.gameObject.CompareTag("controlPoint"))
                 {
                     ShowMenu();
+                    menuCanvasFill.SetActive(false);
                     initialMousePosition = Input.mousePosition;
                     initialGameObjectPosition = hit.transform.position;
                     selectedObject = hit.collider.gameObject;
@@ -333,6 +339,27 @@ public class MatriceOperations : MonoBehaviour
             }
         }
 
+        if (multiply)
+        {
+            rotating = false;
+            translating = false;
+            scaling = false;
+
+            if (Input.GetMouseButton(0) && selectedObject != null)
+            {
+                newPoly = FindPolygon(selectedObject);
+                GameObject cloned = Instantiate(selectedObject, selectedObject.transform.position, selectedObject.transform.rotation);
+                int insertIndex = selectedObject.transform.GetSiblingIndex(); // Calcul de l'index pour insérer le clone juste après l'objet original
+                cloned.transform.SetSiblingIndex(insertIndex);
+                newPoly.Insert(insertIndex, cloned); // Insérer le clone à l'index calculé
+                UpdatePolygon(newPoly);
+
+                Debug.Log("Mul");
+                selectedObject = null;
+                multiply = false;
+            }
+        }
+
         if (shearing)
         {
             // Shearing logic using keyboard keys
@@ -466,6 +493,7 @@ public class MatriceOperations : MonoBehaviour
         deletePoint = false;
         scaling = false;
         shearing = false;
+        multiply = false;
     }
 
     public void StartTranslation()
@@ -475,6 +503,7 @@ public class MatriceOperations : MonoBehaviour
         scaling = false;
         deletePoint = false;
         shearing = false;
+        multiply = false;
         Debug.Log("Translation started");
     }
 
@@ -485,6 +514,7 @@ public class MatriceOperations : MonoBehaviour
         translating = false;
         deletePoint = false;
         shearing = false;
+        multiply = false;
         Debug.Log("Rotation started");
     }
 
@@ -495,6 +525,7 @@ public class MatriceOperations : MonoBehaviour
         translating = false;
         shearing = false;
         deletePoint = false;
+        multiply = false;
         Debug.Log("Scaling started");
     }
 
@@ -505,6 +536,7 @@ public class MatriceOperations : MonoBehaviour
         rotating = false;
         translating = false;
         shearing = false;
+        multiply = false; 
         print("delele point");
     }
 
@@ -515,6 +547,18 @@ public class MatriceOperations : MonoBehaviour
         scaling = false;
         rotating = false;
         translating = false;
+        multiply = false;
         print("delele point");
+    }
+
+    public void StartMultiply()
+    {
+        multiply = true;
+        shearing = false;
+        deletePoint = false;
+        scaling = false;
+        rotating = false;
+        translating = false;
+        print("multiply point");
     }
 }

@@ -72,7 +72,6 @@ public class Casteljau : MonoBehaviour
         curve = bezierCurveObj;
         bezierCurveObj.transform.SetParent(parent.transform);
         bezierCurveObj.transform.SetSiblingIndex(0);
-
         BezierLineRenderer = bezierCurveObj.AddComponent<LineRenderer>();
 
         BezierLineRenderer.positionCount = curvePoints.Count;
@@ -84,15 +83,20 @@ public class Casteljau : MonoBehaviour
 
         BezierLineRenderer.material = lineMaterial;
 
-        BezierLineRenderer.startWidth = 0.3f;
-        BezierLineRenderer.endWidth = 0.3f;
+        BezierLineRenderer.startWidth = 0.05f;
+        BezierLineRenderer.endWidth = 0.05f;
         BezierLineRenderer.textureMode = LineTextureMode.Tile;
         BezierLineRenderer.numCapVertices = 10;
         BezierLineRenderer.numCornerVertices = 10;
+
+
+        pointHandler.drawable.paintInPixels(curvePoints);
     }
 
     public void UpdateDecasteljau(List<GameObject> controlPoints, GameObject bezierCurveObj)
     {
+
+        pointHandler.drawable.ClearCanvas();
         points = controlPoints;
         if (controlPoints.Count < 2)
         {
@@ -124,19 +128,24 @@ public class Casteljau : MonoBehaviour
 
         BezierLineRenderer.material = lineMaterial;
 
-        BezierLineRenderer.startWidth = 0.3f;
-        BezierLineRenderer.endWidth = 0.3f;
+        BezierLineRenderer.startWidth = 0.05f;
+        BezierLineRenderer.endWidth = 0.05f;
         BezierLineRenderer.textureMode = LineTextureMode.Tile;
         BezierLineRenderer.numCapVertices = 10;
         BezierLineRenderer.numCornerVertices = 10;
 
         BezierLineRenderer.sortingOrder = 0;
+
+
+        pointHandler.drawable.paintInPixels(curvePoints);
     }
 
     public void UpdateStep()
     {
         if (curve != null)
         {
+
+            pointHandler.drawable.ClearCanvas();
             if (points.Count < 2)
             {
                 Debug.LogError("At least two control points are required for drawing a Bezier curve.");
@@ -167,15 +176,33 @@ public class Casteljau : MonoBehaviour
 
             BezierLineRenderer.material = lineMaterial;
 
-            BezierLineRenderer.startWidth = 0.3f;
-            BezierLineRenderer.endWidth = 0.3f;
+            BezierLineRenderer.startWidth = 0.05f;
+            BezierLineRenderer.endWidth = 0.05f;
             BezierLineRenderer.textureMode = LineTextureMode.Tile;
             BezierLineRenderer.numCapVertices = 10;
             BezierLineRenderer.numCornerVertices = 10;
 
             BezierLineRenderer.sortingOrder = 0;
+
+            pointHandler.drawable.paintInPixels(curvePoints);
         }
     }
+
+    public List<Vector3> GetCurvePoints(List<GameObject> controlPoints)
+    {
+        int numPoints = Mathf.CeilToInt(1f / stepSize);
+        List<Vector3> curvePoints = new List<Vector3>();
+
+        for (int i = 0; i < numPoints; i++)
+        {
+            float t = i * stepSize;
+            Vector3 point = CalculateBezierPoint(t, controlPoints);
+            curvePoints.Add(point);
+        }
+
+        return curvePoints;
+    }
+
     private Vector3 CalculateBezierPoint(float t, List<GameObject> controlPoints)
     {
         int numPoints = controlPoints.Count;

@@ -8,111 +8,232 @@ public class PointHandler : MonoBehaviour
 {
     public GameObject pointPrefab; // Prefab pour l'objet point
     public List<GameObject> points = new List<GameObject>(); // Liste pour stocker les points
+    public List<GameObject> pointsZ = new List<GameObject>();
     private List<GameObject> lines = new List<GameObject>(); // Liste pour stocker les objets ligne (polygones)
     private bool drawing = false; // Indique si le dessin est en cours
     public Color currentColor = Color.red; // Couleur actuellement sélectionnée
 
     private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
     public List<List<GameObject>> courbes = new List<List<GameObject>>();
+    List<Vector3> LastCurvePoints = new List<Vector3>();
 
     public Casteljau decasteljauScript;
     public Pascal pascalScript;
+    public Drawing drawable;
     public bool clearOne = false;
 
     public bool isLinking = false;
     public int linkType;
 
+    public GameObject extrusionPrefab;
+    public GameObject extrusionAxePrefab;
+    public GameObject extrusionPathPrefab;
+    private bool isExtruding = false;
+    private bool isExtrudingAxe = false;
+    private bool isActivePascal = false;
+    private bool isZCurve=false;
+    public float extrusionLength = 5f;
     void Update()
     {
-        // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
-        if (Input.GetMouseButtonDown(0) && drawing && !IsPointerOverUIObject())
+        if (isZCurve)
         {
-            // Obtenir la position de la souris dans l'espace du monde
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mousePos.z = 0f; // S'assurer que la coordonnée z est 0 pour l'espace 2D
-
-            // Instancier un objet point à la position de la souris
-            GameObject point = Instantiate(pointPrefab, mousePos, Quaternion.identity);
-            point.tag = "controlPoint";
-            point.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du point
-            points.Add(point); // Ajouter le point à la liste
-        }
-
-        // Vérifier si le clic droit de la souris est enfoncé et si le dessin est en cours
-        if (Input.GetMouseButtonDown(1) && drawing)
-        {
-            drawing = false; // Arrêter le dessin
-            List<GameObject> currentPoints = new List<GameObject>(points);
-            ConnectPoints(currentPoints); // Connecter les points pour former un polygone
-            courbes.Add(currentPoints);
-        }
-
-        // Vérifier si la vérification des polygones est active et si le clic gauche de la souris est enfoncé
-        if (isCheckingPolygon && Input.GetMouseButtonDown(0) && !IsPointerOverUIObject())
-        {
-            isCheckingPolygon = false;
-            GameObject insidePolygon = IsInsidePolygon();
-            if (insidePolygon != null)
+            Debug.Log("CurveZ");
+            GameObject curveZGameObject = IsInsidePolygon();
+            // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
+            if (Input.GetMouseButtonDown(0) && drawing && !IsPointerOverUIObject())
             {
-                Debug.Log("Clic à l'intérieur du polygone : " + insidePolygon.name);
-                // Faites quelque chose avec l'objet line (polygone) trouvé
+                // Obtenir la position de la souris dans l'espace du monde
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                //mousePos.y = 0f; // S'assurer que la coordonnée z est 0 pour l'espace 2D
 
-                // Get the points of the clicked polygon
-                List<GameObject> polygonPoints = new List<GameObject>();
-                foreach (Transform child in insidePolygon.transform)
-                {
-                    polygonPoints.Add(child.gameObject);
-                }
-
-                if (decasteljauScript.decasteljau)
-                {
-                    decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
-                    decasteljauScript.decasteljau = false;
-                    print("casteljau function worked");
-
-                } 
-                else if (pascalScript.pascal)
-                {
-                    pascalScript.DrawCurve(polygonPoints, insidePolygon);
-                    pascalScript.pascal = false;
-                    print("pascal function worked");
-                }
-                else if (isLinking)
-                {
-                    if(linkType == 0)
-                    {
-                        C0Link(polygonPoints);
-                    }
-                    else if(linkType == 1)
-                    {
-                        C1Link(polygonPoints);
-                    }
-                    else if(linkType == 2)
-                    {
-                        C2Link(polygonPoints);
-                    }
-                    isLinking = false;
-                    drawing = true;
-                }
-                else if(clearOne)
-                {
-                    Destroy(insidePolygon);
-                    clearOne = false;
-                    lines.Remove(insidePolygon); 
-                    //need to add : delete the polygon from 'courbes'
-                    print("cleared one polygon");
-                } 
+                // Instancier un objet point à la position de la souris
+                GameObject point = Instantiate(pointPrefab, mousePos, Quaternion.identity);
+                point.tag = "controlPoint";
+                point.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du point
+                pointsZ.Add(point); // Ajouter le point à la liste
             }
-            else
+
+            // Vérifier si le clic droit de la souris est enfoncé et si le dessin est en cours
+            if (Input.GetMouseButtonDown(1) && drawing)
             {
-                Debug.Log("Clic à l'extérieur de tous les polygones.");
+                drawing = false; // Arrêter le dessin
+                List<GameObject> currentPointsZ = new List<GameObject>(pointsZ);
+                ConnectPoints(currentPointsZ); // Connecter les points pour former un polygone
+                courbes.Add(currentPointsZ);
+                decasteljauScript.DrawBezierCurve(currentPointsZ, curveZGameObject);
+                List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(currentPointsZ);
+                CreateExtrusionPath(LastCurvePoints, curvePoints, curveZGameObject.transform);
+                isZCurve = false;
             }
+        }
+        else
+        {
+            // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
+            if (Input.GetMouseButtonDown(0) && drawing && !IsPointerOverUIObject())
+            {
+                // Obtenir la position de la souris dans l'espace du monde
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                mousePos.z = 0f; // S'assurer que la coordonnée z est 0 pour l'espace 2D
+
+                // Instancier un objet point à la position de la souris
+                GameObject point = Instantiate(pointPrefab, mousePos, Quaternion.identity);
+                point.tag = "controlPoint";
+                point.GetComponent<Renderer>().material.color = currentColor; // Définir la couleur du point
+                points.Add(point); // Ajouter le point à la liste
+            }
+
+            // Vérifier si le clic droit de la souris est enfoncé et si le dessin est en cours
+            if (Input.GetMouseButtonDown(1) && drawing)
+            {
+                drawing = false; // Arrêter le dessin
+                List<GameObject> currentPoints = new List<GameObject>(points);
+                ConnectPoints(currentPoints); // Connecter les points pour former un polygone
+                courbes.Add(currentPoints);
+            }
+
+
+            // Vérifier si la vérification des polygones est active et si le clic gauche de la souris est enfoncé
+            if (isCheckingPolygon && Input.GetMouseButtonDown(0) && !IsPointerOverUIObject())
+            {
+                isCheckingPolygon = false;
+                LastCurvePoints.Clear();
+                GameObject insidePolygon = IsInsidePolygon();
+                if (insidePolygon != null)
+                {
+                    Debug.Log("Clic à l'intérieur du polygone : " + insidePolygon.name);
+                    // Faites quelque chose avec l'objet line (polygone) trouvé
+
+                    // Get the points of the clicked polygon
+                    List<GameObject> polygonPoints = new List<GameObject>();
+                    foreach (Transform child in insidePolygon.transform)
+                    {
+                        polygonPoints.Add(child.gameObject);
+                    }
+
+                    if (decasteljauScript.decasteljau)
+                    {
+                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
+                        decasteljauScript.decasteljau = false;
+                        print("casteljau function worked");
+
+                        isActivePascal = false;
+                        // Extrude the curve in 3D
+                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints= curvePoints;
+                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                        CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+                    }
+                    else if (pascalScript.pascal)
+                    {
+                        pascalScript.DrawCurve(polygonPoints, insidePolygon);
+                        pascalScript.pascal = false;
+                        print("pascal function worked");
+                        isActivePascal = true;
+                        // Extrude the curve in 3D
+                        List<Vector3> curvePoints = pascalScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints= curvePoints;   
+                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                        //CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+                    }
+                    else if (isExtruding)
+                    {
+                        // Extrude the curve in 3D
+                        List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                            decasteljauScript.GetCurvePoints(polygonPoints) :
+                            pascalScript.GetCurvePoints(polygonPoints);
+
+                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                        isExtruding = false; // Reset the flag after extrusion
+                    }
+                    else if (isLinking)
+                    {
+                        if (linkType == 0)
+                        {
+                            C0Link(polygonPoints);
+                        }
+                        else if (linkType == 1)
+                        {
+                            C1Link(polygonPoints);
+                        }
+                        else if (linkType == 2)
+                        {
+                            C2Link(polygonPoints);
+                        }
+                        isLinking = false;
+                        drawing = true;
+                    }
+                    else if (clearOne)
+                    {
+                        Destroy(insidePolygon);
+                        clearOne = false;
+                        lines.Remove(insidePolygon);
+                        //need to add : delete the polygon from 'courbes'
+                        print("cleared one polygon");
+                    }
+                    if (isExtrudingAxe)
+                    {
+
+                    }
+                }
+                else
+                {
+                    Debug.Log("Clic à l'extérieur de tous les polygones.");
+                }
+            }
+        
+            
         }
     }
+    public void zcurve()
+    {
+        isZCurve = true;
+    }
+    private void CreateExtrusionPath(List<Vector3> polygonPoints, List<Vector3> Path, Transform parent)
+    {
+        Debug.Log("Entra a path");
+        // Create the extrusion object from the prefab
+        GameObject extrusionPath = Instantiate(extrusionPathPrefab);
 
+        // Get the ExtrudeBezier component and update the extrusion
+        ExtrusionLongCurve extrusionpath = extrusionPath.GetComponent<ExtrusionLongCurve>();
+        //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
+        extrusionpath.StartAnimation(polygonPoints, Path, extrusionpath.segmentCount, currentColor, 5);
+    }
+    private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent)
+    {
+        // Create the extrusion object from the prefab
+        GameObject extrusionAxe = Instantiate(extrusionAxePrefab);
+
+        // Get the ExtrudeBezier component and update the extrusion
+        ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
+        //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
+        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 5);
+    }
+    private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
+    {
+        // Create the extrusion object from the prefab
+        GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        // Get the ExtrudeBezier component and update the extrusion
+        Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
+        extrusionScript.UpdateExtrusion(curvePoints, currentColor, parent);
+    }
     public void ClearOne()
     {
         clearOne = true;
+    }
+
+    // Method to activate extrusion mode
+    public void ActivateExtrusion()
+    {
+        isExtruding = true;
+    }
+    public void ActivateAxeExtrusion()
+    {
+        Debug.Log("Extrude True");
+        isExtrudingAxe = true;  
     }
 
     // Méthode pour connecter les points pour former un polygone
@@ -132,8 +253,8 @@ public class PointHandler : MonoBehaviour
         // Ajouter un composant LineRenderer pour dessiner les lignes
         LineRenderer lineRenderer = polygonObj.AddComponent<LineRenderer>();
         lineRenderer.positionCount = currentPoints.Count; // Définir le nombre de positions
-        lineRenderer.startWidth = 0.1f; // Définir la largeur de la ligne
-        lineRenderer.endWidth = 0.1f;
+        lineRenderer.startWidth = 0.02f; // Définir la largeur de la ligne
+        lineRenderer.endWidth = 0.02f;
         lineRenderer.loop = true; // Relier le dernier point au premier point
 
         // Définir la couleur de la ligne pour correspondre à la couleur des points
@@ -227,7 +348,7 @@ public class PointHandler : MonoBehaviour
                     polygon[i] = new Vector2(lineRenderer.GetPosition(i).x, lineRenderer.GetPosition(i).y);
                 }
 
-                if (IsPointInPolygon(new Vector2(mousePos.x, mousePos.y), polygon))
+                if (IsPointInPolygon(new Vector2(mousePos.x, mousePos.y), polygon) || isZCurve)
                 {
                     return lineObj; // Le clic est à l'intérieur d'un polygone existant
                 }
