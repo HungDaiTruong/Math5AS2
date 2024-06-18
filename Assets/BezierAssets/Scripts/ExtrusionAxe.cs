@@ -8,8 +8,14 @@ public class ExtrusionAxe : MonoBehaviour
     // Lista de puntos de la curva
     //public List<Vector3> curvePoints;
     public int segmentCount = 36;
+    private MeshRenderer meshRenderer;
 
-    public void ExtrudeSurAxe(List<Vector3> curve, Transform parent)
+    void Start()
+    {
+        meshRenderer = GetComponent<MeshRenderer>();
+    }
+
+    public void ExtrudeSurAxe(List<Vector3> curve, Transform parent, Color currentColor)
     {
         if (curve == null || curve.Count < 2)
         {
@@ -19,10 +25,10 @@ public class ExtrusionAxe : MonoBehaviour
 
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         transform.SetParent(parent);
-        meshFilter.mesh = CreateRevolvedMesh(curve, segmentCount);
+        meshFilter.mesh = CreateRevolvedMesh(curve, segmentCount, currentColor);
     }
 
-    Mesh CreateRevolvedMesh(List<Vector3> curve, int segments)
+    Mesh CreateRevolvedMesh(List<Vector3> curve, int segments, Color currentColor)
     {
         int curvePointCount = curve.Count;
         int verticesCount = curvePointCount * (segments + 1);
@@ -70,6 +76,13 @@ public class ExtrusionAxe : MonoBehaviour
         mesh.triangles = triangles;
         mesh.uv = uvs;
         mesh.RecalculateNormals();
+
+        // Apply the new color to the material
+        if (meshRenderer == null)
+        {
+            meshRenderer = GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material.color = currentColor;
 
         return mesh;
     }

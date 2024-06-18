@@ -6,8 +6,14 @@ using UnityEngine;
 public class ExtrusionLongCurve : MonoBehaviour
 {
     public int segmentCount = 36; // Número de segmentos alrededor de la curva 3D
+    private MeshRenderer meshRenderer;
 
-    public void ExtrudeAlongCurve(List<Vector3> shape, List<Vector3> path, Transform parent)
+    void Start()
+    {
+        meshRenderer = GetComponent<MeshRenderer>();
+    }
+
+    public void ExtrudeAlongCurve(List<Vector3> shape, List<Vector3> path, Transform parent, Color currentColor)
     {
         if (shape == null || shape.Count < 2 || path == null || path.Count < 2)
         {
@@ -17,10 +23,9 @@ public class ExtrusionLongCurve : MonoBehaviour
 
         MeshFilter meshFilter = GetComponent<MeshFilter>(); 
         transform.SetParent(parent);
-        meshFilter.mesh = CreateExtrudedMesh(shape, path, segmentCount);
+        meshFilter.mesh = CreateExtrudedMesh(shape, path, segmentCount, currentColor);
     }
-
-    Mesh CreateExtrudedMesh(List<Vector3> shape, List<Vector3> path, int segments)
+    Mesh CreateExtrudedMesh(List<Vector3> shape, List<Vector3> path, int segments, Color currentColor)
     {
         int shapePointCount = shape.Count;
         int pathPointCount = path.Count;
@@ -30,6 +35,12 @@ public class ExtrusionLongCurve : MonoBehaviour
         int[] triangles = new int[(shapePointCount - 1) * (pathPointCount - 1) * 6];
         Vector2[] uvs = new Vector2[verticesCount];
 
+        // Invert shape along the Y-axis
+        for (int i = 0; i < shape.Count; i++)
+        {
+            shape[i] = new Vector3(shape[i].x, -shape[i].y, shape[i].z);
+        }
+
         // Crear vértices
         for (int i = 0; i < pathPointCount; i++)
         {
@@ -38,12 +49,12 @@ public class ExtrusionLongCurve : MonoBehaviour
             if (i < pathPointCount - 1)
             {
                 Vector3 direction = (path[i + 1] - path[i]).normalized;
-                rotation = Quaternion.LookRotation(direction, Vector3.up);
+                rotation = Quaternion.LookRotation(direction, Vector3.down);
             }
             else if (i > 0)
             {
                 Vector3 direction = (path[i] - path[i - 1]).normalized;
-                rotation = Quaternion.LookRotation(direction, Vector3.up);
+                rotation = Quaternion.LookRotation(direction, Vector3.down);
             }
 
             for (int j = 0; j < shapePointCount; j++)
@@ -64,12 +75,13 @@ public class ExtrusionLongCurve : MonoBehaviour
                 int current = i * shapePointCount + j;
                 int next = (i + 1) * shapePointCount + j;
 
+                // Define triangles in counter-clockwise order
                 triangles[triangleIndex++] = current;
-                triangles[triangleIndex++] = next;
                 triangles[triangleIndex++] = current + 1;
+                triangles[triangleIndex++] = next;
 
-                triangles[triangleIndex++] = current + 1;
                 triangles[triangleIndex++] = next;
+                triangles[triangleIndex++] = current + 1;
                 triangles[triangleIndex++] = next + 1;
             }
         }
@@ -79,6 +91,21 @@ public class ExtrusionLongCurve : MonoBehaviour
         mesh.triangles = triangles;
         mesh.uv = uvs;
         mesh.RecalculateNormals();
+        mesh.SetNormals(vertices);
+
+        /*        Mesh backMesh = new Mesh();
+                backMesh.vertices = vertices;
+                backMesh.triangles = triangles;
+                backMesh.uv = uvs;
+                backMesh.RecalculateNormals();
+                backMesh.SetNormals(vertices);*/
+
+        // Apply the new color to the material
+        if (meshRenderer == null)
+        {
+            meshRenderer = GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material.color = currentColor;
 
         return mesh;
     }
