@@ -50,7 +50,7 @@ public class Extrusion : MonoBehaviour
         // Appliquer les vertices et triangles au mesh
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals();
+        mesh.ManuallyRecalculateNormals();
     }
 
     /* void AddCap(List<int> triangles, List<Vector3> vertices, bool isTop)

@@ -117,12 +117,13 @@ public class PointHandler : MonoBehaviour
                         print("casteljau function worked");
 
                         isActivePascal = false;
+
+
                         // Extrude the curve in 3D
                         List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
                         LastCurvePoints= curvePoints;
                         CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
                         CreateExtrusionAxe(curvePoints, insidePolygon.transform);
-                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
                     }
                     else if (pascalScript.pascal)
                     {
@@ -130,12 +131,12 @@ public class PointHandler : MonoBehaviour
                         pascalScript.pascal = false;
                         print("pascal function worked");
                         isActivePascal = true;
+
+
                         // Extrude the curve in 3D
                         List<Vector3> curvePoints = pascalScript.GetCurvePoints(polygonPoints);
                         LastCurvePoints= curvePoints;   
                         CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
-                        //CreateExtrusionAxe(curvePoints, insidePolygon.transform);
-                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
                     }
                     else if (isExtruding)
                     {
@@ -172,9 +173,20 @@ public class PointHandler : MonoBehaviour
                         //need to add : delete the polygon from 'courbes'
                         print("cleared one polygon");
                     }
-                    if (isExtrudingAxe)
+                    else if (isExtrudingAxe)
                     {
+                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
+                        decasteljauScript.decasteljau = false;
+                        print("casteljau function worked");
 
+                        isActivePascal = false;
+
+
+                        // Extrude the curve in 3D
+                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints = curvePoints;
+                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
+                        CreateExtrusionAxe(curvePoints, insidePolygon.transform);
                     }
                 }
                 else
@@ -182,14 +194,14 @@ public class PointHandler : MonoBehaviour
                     Debug.Log("Clic à l'extérieur de tous les polygones.");
                 }
             }
-        
-            
         }
     }
+
     public void zcurve()
     {
         isZCurve = true;
     }
+
     private void CreateExtrusionPath(List<Vector3> polygonPoints, List<Vector3> Path, Transform parent)
     {
         Debug.Log("Entra a path");
@@ -201,6 +213,7 @@ public class PointHandler : MonoBehaviour
         //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
         extrusionpath.StartAnimation(polygonPoints, Path, extrusionpath.segmentCount, currentColor, 5);
     }
+
     private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent)
     {
         // Create the extrusion object from the prefab
@@ -211,6 +224,7 @@ public class PointHandler : MonoBehaviour
         //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
         extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 5);
     }
+
     private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
     {
         // Create the extrusion object from the prefab
@@ -220,6 +234,7 @@ public class PointHandler : MonoBehaviour
         Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
         extrusionScript.UpdateExtrusion(curvePoints, currentColor, parent);
     }
+
     public void ClearOne()
     {
         clearOne = true;
