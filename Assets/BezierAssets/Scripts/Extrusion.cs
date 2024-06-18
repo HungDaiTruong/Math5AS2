@@ -15,6 +15,10 @@ public class Extrusion : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
     }
 
+    private void Update()
+    {
+        GenerateMesh();
+    }
     void GenerateMesh()
     {
         mesh = new Mesh();

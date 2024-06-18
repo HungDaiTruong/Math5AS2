@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
+using UnityEngine.XR;
 
 public class PointHandler : MonoBehaviour
 {
@@ -32,7 +34,11 @@ public class PointHandler : MonoBehaviour
     private bool isExtrudingAxe = false;
     private bool isActivePascal = false;
     private bool isZCurve=false;
+    private bool isRevExtruding = false;
     public float extrusionLength = 5f;
+
+    private List<Vector3> curvePoints;
+
     void Update()
     {
         if (isZCurve)
@@ -117,12 +123,7 @@ public class PointHandler : MonoBehaviour
                         print("casteljau function worked");
 
                         isActivePascal = false;
-                        // Extrude the curve in 3D
-                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
-                        LastCurvePoints= curvePoints;
-                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
-                        CreateExtrusionAxe(curvePoints, insidePolygon.transform);
-                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+
                     }
                     else if (pascalScript.pascal)
                     {
@@ -130,22 +131,24 @@ public class PointHandler : MonoBehaviour
                         pascalScript.pascal = false;
                         print("pascal function worked");
                         isActivePascal = true;
-                        // Extrude the curve in 3D
-                        List<Vector3> curvePoints = pascalScript.GetCurvePoints(polygonPoints);
-                        LastCurvePoints= curvePoints;   
-                        CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
-                        //CreateExtrusionAxe(curvePoints, insidePolygon.transform);
-                        //extrusionAxeScript.ExtrudeSurAxe(curvePoints);
+
                     }
                     else if (isExtruding)
                     {
-                        // Extrude the curve in 3D
                         List<Vector3> curvePoints = decasteljauScript.decasteljau ?
                             decasteljauScript.GetCurvePoints(polygonPoints) :
                             pascalScript.GetCurvePoints(polygonPoints);
 
                         CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
-                        isExtruding = false; // Reset the flag after extrusion
+                        isExtruding = false; 
+                    }
+                    else if (isRevExtruding)
+                    {
+                        List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                            decasteljauScript.GetCurvePoints(polygonPoints) :
+                            pascalScript.GetCurvePoints(polygonPoints);
+
+                        CreateExtrusionAxe(curvePoints, insidePolygon.transform);
                     }
                     else if (isLinking)
                     {
@@ -171,10 +174,6 @@ public class PointHandler : MonoBehaviour
                         lines.Remove(insidePolygon);
                         //need to add : delete the polygon from 'courbes'
                         print("cleared one polygon");
-                    }
-                    if (isExtrudingAxe)
-                    {
-
                     }
                 }
                 else
@@ -234,6 +233,11 @@ public class PointHandler : MonoBehaviour
     {
         Debug.Log("Extrude True");
         isExtrudingAxe = true;  
+    }
+
+    public void ActivateRevolutionExtrusion()
+    {
+        isRevExtruding = true;
     }
 
     // Méthode pour connecter les points pour former un polygone
