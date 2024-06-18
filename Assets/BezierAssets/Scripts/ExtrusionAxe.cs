@@ -92,7 +92,7 @@ public class ExtrusionAxe : MonoBehaviour
                 if (triangleIndex % (speed * 6) == 0)
                 {
                     mesh.triangles = triangles;
-                    mesh.RecalculateNormals();
+                    mesh.ManuallyRecalculateNormals();
                     // Wait for the next frame
                     yield return null;
                 }
