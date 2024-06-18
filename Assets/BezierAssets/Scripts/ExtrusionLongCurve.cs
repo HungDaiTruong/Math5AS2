@@ -70,7 +70,7 @@ public class ExtrusionLongCurve : MonoBehaviour
         mesh.vertices = vertices;
         mesh.uv = uvs;
         mesh.triangles = new int[0]; // Initially, no triangles
-        mesh.RecalculateNormals();
+        mesh.ManuallyRecalculateNormals();
         mesh.SetNormals(vertices);
 
         // Apply the new color to the material
@@ -109,7 +109,7 @@ public class ExtrusionLongCurve : MonoBehaviour
                 if (triangleIndex % (speed * 6) == 0)
                 {
                     mesh.triangles = triangles;
-                    mesh.RecalculateNormals();
+                    mesh.ManuallyRecalculateNormals();
                     // Wait for the next frame
                     yield return null;
                 }
@@ -118,7 +118,7 @@ public class ExtrusionLongCurve : MonoBehaviour
 
         // Ensure all triangles are set
         mesh.triangles = triangles;
-        mesh.RecalculateNormals();
+        mesh.ManuallyRecalculateNormals();
     }
 
     public void StartAnimation(List<Vector3> shape, List<Vector3> path, int segments, Color currentColor, int speed)

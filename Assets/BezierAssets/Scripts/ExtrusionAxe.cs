@@ -56,7 +56,7 @@ public class ExtrusionAxe : MonoBehaviour
         mesh.vertices = vertices;
         mesh.uv = uvs;
         mesh.triangles = new int[0]; // Initially, no triangles
-        mesh.RecalculateNormals();
+        mesh.ManuallyRecalculateNormals();
 
         // Apply the new color to the material
         if (meshRenderer == null)
@@ -92,7 +92,7 @@ public class ExtrusionAxe : MonoBehaviour
                 if (triangleIndex % (speed * 6) == 0)
                 {
                     mesh.triangles = triangles;
-                    mesh.RecalculateNormals();
+                    mesh.ManuallyRecalculateNormals();
                     // Wait for the next frame
                     yield return null;
                 }
