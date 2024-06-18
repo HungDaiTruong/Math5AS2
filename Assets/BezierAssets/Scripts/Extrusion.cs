@@ -10,6 +10,7 @@ public class Extrusion : MonoBehaviour
     private Mesh mesh;
     private MeshRenderer meshRenderer;
 
+
     void Start()
     {
         meshRenderer = GetComponent<MeshRenderer>();
@@ -80,11 +81,42 @@ public class Extrusion : MonoBehaviour
         {
             meshRenderer = GetComponent<MeshRenderer>();
         }
-        meshRenderer.material.color = currentColor;
+        //meshRenderer.material.color = currentColor;
+
+        if (PointHandler.setMaterialWood)
+        {
+            Texture2D texture = Resources.Load<Texture2D>("wood");
+            Material material = new Material(Shader.Find("Standard"));
+            material.mainTexture = texture;
+            meshRenderer.material = material;
+        } else if (PointHandler.setMaterialMetal)
+        {
+            Texture2D texture = Resources.Load<Texture2D>("metal");
+            Material material = new Material(Shader.Find("Standard"));
+            material.mainTexture = texture;
+            meshRenderer.material = material;
+        }
+        ConfigureLighting();
 
         // Set the parent
         transform.SetParent(parent);
 
         GenerateMesh();
+    }
+
+    void ConfigureLighting()
+    {
+        // Crear una luz direccional
+        GameObject lightGameObject = new GameObject("Directional Light");
+        Light lightComp = lightGameObject.AddComponent<Light>();
+        lightComp.type = LightType.Directional;
+        lightComp.color = Color.white;
+        lightComp.intensity = 1.0f;
+
+        // Configurar la posición y rotación de la luz
+        lightGameObject.transform.position = new Vector3(0, 10, 0);
+        lightGameObject.transform.rotation = Quaternion.Euler(50, -30, 0);
+
+        // Opcional: Configurar más luces y parámetros de iluminación según sea necesario
     }
 }

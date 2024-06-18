@@ -39,6 +39,9 @@ public class PointHandler : MonoBehaviour
 
     private List<Vector3> curvePoints;
 
+    public static bool setMaterialWood = false;
+    public static bool setMaterialMetal = false; 
+
     void Update()
     {
         if (isZCurve)
@@ -323,6 +326,19 @@ public class PointHandler : MonoBehaviour
     {
         currentColor = Color.black;
         drawing = true;
+    }
+
+    public void SetMaterialWood()
+    {
+        setMaterialMetal = false;
+        setMaterialWood = true;
+    }
+
+    public void SetMaterialMetal()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = true;
+
     }
 
     // Méthode pour vérifier si le pointeur de la souris est sur un objet UI
