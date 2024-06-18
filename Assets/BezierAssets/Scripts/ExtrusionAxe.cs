@@ -28,7 +28,7 @@ public class ExtrusionAxe : MonoBehaviour
         meshFilter.mesh = CreateRevolvedMesh(curve, segmentCount, currentColor);
     }
 
-    Mesh CreateRevolvedMesh(List<Vector3> curve, int segments, Color currentColor)
+    public Mesh CreateRevolvedMesh(List<Vector3> curve, int segments, Color currentColor)
     {
         int curvePointCount = curve.Count;
         int verticesCount = curvePointCount * (segments + 1);
@@ -52,8 +52,28 @@ public class ExtrusionAxe : MonoBehaviour
             }
         }
 
-        // Crear triángulos
+        Mesh mesh = new Mesh();
+        mesh.vertices = vertices;
+        mesh.uv = uvs;
+        mesh.triangles = new int[0]; // Initially, no triangles
+        mesh.RecalculateNormals();
+
+        // Apply the new color to the material
+        if (meshRenderer == null)
+        {
+            meshRenderer = GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material.color = currentColor;
+
+        return mesh;
+    }
+
+    public IEnumerator AnimateTriangles(Mesh mesh, List<Vector3> curve, int segments, int speed)
+    {
+        int curvePointCount = curve.Count;
         int triangleIndex = 0;
+        int[] triangles = new int[segments * (curvePointCount - 1) * 6];
+
         for (int i = 0; i < segments; i++)
         {
             for (int j = 0; j < curvePointCount - 1; j++)
@@ -68,22 +88,22 @@ public class ExtrusionAxe : MonoBehaviour
                 triangles[triangleIndex++] = current + 1;
                 triangles[triangleIndex++] = next;
                 triangles[triangleIndex++] = next + 1;
+
+                if (triangleIndex % (speed * 6) == 0)
+                {
+                    mesh.triangles = triangles;
+                    mesh.RecalculateNormals();
+                    // Wait for the next frame
+                    yield return null;
+                }
             }
         }
+    }
 
-        Mesh mesh = new Mesh();
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.uv = uvs;
-        mesh.RecalculateNormals();
-
-        // Apply the new color to the material
-        if (meshRenderer == null)
-        {
-            meshRenderer = GetComponent<MeshRenderer>();
-        }
-        meshRenderer.material.color = currentColor;
-
-        return mesh;
+    public void StartAnimation(List<Vector3> curve, int segments, Color currentColor, int speed)
+    {
+        Mesh mesh = CreateRevolvedMesh(curve, segments, currentColor);
+        GetComponent<MeshFilter>().mesh = mesh;
+        StartCoroutine(AnimateTriangles(mesh, curve, segments, speed));
     }
 }

@@ -198,7 +198,8 @@ public class PointHandler : MonoBehaviour
 
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionLongCurve extrusionpath = extrusionPath.GetComponent<ExtrusionLongCurve>();
-        extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
+        //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
+        extrusionpath.StartAnimation(polygonPoints, Path, extrusionpath.segmentCount, currentColor, 5);
     }
     private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent)
     {
@@ -207,7 +208,8 @@ public class PointHandler : MonoBehaviour
 
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
-        extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
+        //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
+        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 5);
     }
     private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
     {

@@ -25,7 +25,7 @@ public class ExtrusionLongCurve : MonoBehaviour
         transform.SetParent(parent);
         meshFilter.mesh = CreateExtrudedMesh(shape, path, segmentCount, currentColor);
     }
-    Mesh CreateExtrudedMesh(List<Vector3> shape, List<Vector3> path, int segments, Color currentColor)
+    public Mesh CreateExtrudedMesh(List<Vector3> shape, List<Vector3> path, int segments, Color currentColor)
     {
         int shapePointCount = shape.Count;
         int pathPointCount = path.Count;
@@ -66,8 +66,30 @@ public class ExtrusionLongCurve : MonoBehaviour
             }
         }
 
-        // Crear triángulos
+        Mesh mesh = new Mesh();
+        mesh.vertices = vertices;
+        mesh.uv = uvs;
+        mesh.triangles = new int[0]; // Initially, no triangles
+        mesh.RecalculateNormals();
+        mesh.SetNormals(vertices);
+
+        // Apply the new color to the material
+        if (meshRenderer == null)
+        {
+            meshRenderer = GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material.color = currentColor;
+
+        return mesh;
+    }
+
+    public IEnumerator AnimateTriangles(Mesh mesh, List<Vector3> shape, List<Vector3> path, int speed)
+    {
+        int shapePointCount = shape.Count;
+        int pathPointCount = path.Count;
         int triangleIndex = 0;
+        int[] triangles = new int[(shapePointCount - 1) * (pathPointCount - 1) * 6];
+
         for (int i = 0; i < pathPointCount - 1; i++)
         {
             for (int j = 0; j < shapePointCount - 1; j++)
@@ -83,30 +105,26 @@ public class ExtrusionLongCurve : MonoBehaviour
                 triangles[triangleIndex++] = next;
                 triangles[triangleIndex++] = current + 1;
                 triangles[triangleIndex++] = next + 1;
+
+                if (triangleIndex % (speed * 6) == 0)
+                {
+                    mesh.triangles = triangles;
+                    mesh.RecalculateNormals();
+                    // Wait for the next frame
+                    yield return null;
+                }
             }
         }
 
-        Mesh mesh = new Mesh();
-        mesh.vertices = vertices;
+        // Ensure all triangles are set
         mesh.triangles = triangles;
-        mesh.uv = uvs;
         mesh.RecalculateNormals();
-        mesh.SetNormals(vertices);
+    }
 
-        /*        Mesh backMesh = new Mesh();
-                backMesh.vertices = vertices;
-                backMesh.triangles = triangles;
-                backMesh.uv = uvs;
-                backMesh.RecalculateNormals();
-                backMesh.SetNormals(vertices);*/
-
-        // Apply the new color to the material
-        if (meshRenderer == null)
-        {
-            meshRenderer = GetComponent<MeshRenderer>();
-        }
-        meshRenderer.material.color = currentColor;
-
-        return mesh;
+    public void StartAnimation(List<Vector3> shape, List<Vector3> path, int segments, Color currentColor, int speed)
+    {
+        Mesh mesh = CreateExtrudedMesh(shape, path, segments, currentColor);
+        GetComponent<MeshFilter>().mesh = mesh;
+        StartCoroutine(AnimateTriangles(mesh, shape, path, speed));
     }
 }

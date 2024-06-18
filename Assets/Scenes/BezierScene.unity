@@ -3545,7 +3545,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   Reset_Canvas_On_Play: 1
-  Reset_Colour: {r: 0.30647027, g: 0.44776955, b: 0.6698113, a: 1}
+  Reset_Colour: {r: 0.30647027, g: 0.44776955, b: 0.6698113, a: 0.5254902}
   drawable_texture: {fileID: 0}
   is_filling: 0
   x: 0
