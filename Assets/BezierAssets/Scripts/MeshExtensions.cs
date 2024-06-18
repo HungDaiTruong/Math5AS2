@@ -43,5 +43,29 @@ public static class MeshExtensions
         // Assign the new normals to the mesh
         mesh.normals = normals;
     }
+    public static IEnumerator PermanentAnimation(Mesh mesh, float amplitude, float speed)
+    {
+        Vector3[] baseVertices = mesh.vertices;
+        Vector3[] vertices = new Vector3[baseVertices.Length];
+        baseVertices.CopyTo(vertices, 0);
+        Vector3[] normals = mesh.normals;
+
+        float time = 0f;
+
+        while (true)
+        {
+            time += Time.deltaTime * speed;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                float offset = Mathf.Sin(time + i) * amplitude;
+                vertices[i] = baseVertices[i] + normals[i] * offset;
+            }
+
+            mesh.vertices = vertices;
+            mesh.ManuallyRecalculateNormals();
+
+            yield return null;
+        }
+    }
 }
 

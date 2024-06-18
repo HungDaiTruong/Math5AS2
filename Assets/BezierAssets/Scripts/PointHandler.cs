@@ -215,7 +215,7 @@ public class PointHandler : MonoBehaviour
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
         //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
-        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 5);
+        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 1);
     }
     private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
     {
