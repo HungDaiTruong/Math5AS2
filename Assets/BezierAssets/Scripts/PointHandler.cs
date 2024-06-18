@@ -124,6 +124,9 @@ public class PointHandler : MonoBehaviour
 
                         isActivePascal = false;
 
+                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints = curvePoints;
+
                     }
                     else if (pascalScript.pascal)
                     {
@@ -132,6 +135,8 @@ public class PointHandler : MonoBehaviour
                         print("pascal function worked");
                         isActivePascal = true;
 
+                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints = curvePoints;
                     }
                     else if (isExtruding)
                     {
@@ -139,6 +144,7 @@ public class PointHandler : MonoBehaviour
                             decasteljauScript.GetCurvePoints(polygonPoints) :
                             pascalScript.GetCurvePoints(polygonPoints);
 
+                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
                         CreateAndExtrudeObject(curvePoints, insidePolygon.transform);
                         isExtruding = false; 
                     }
@@ -148,6 +154,7 @@ public class PointHandler : MonoBehaviour
                             decasteljauScript.GetCurvePoints(polygonPoints) :
                             pascalScript.GetCurvePoints(polygonPoints);
 
+                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
                         CreateExtrusionAxe(curvePoints, insidePolygon.transform);
                     }
                     else if (isLinking)

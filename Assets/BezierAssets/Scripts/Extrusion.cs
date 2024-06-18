@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class Extrusion : MonoBehaviour
 {
     public List<Vector3> curvePoints; // Points de la courbe de Bézier en 3D
-    public float height = 1.0f; // Hauteur d'extrusion
+    public float height = -1.0f; // Hauteur d'extrusion
     public float scale = 1.0f; // Coefficient d'agrandissement ou de réduction
     private Mesh mesh;
     private MeshRenderer meshRenderer;
