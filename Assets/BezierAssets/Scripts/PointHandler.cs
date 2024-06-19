@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
 using UnityEngine.XR;
+using UnityEngine.UI;
 
 public class PointHandler : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public class PointHandler : MonoBehaviour
 
     private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
     public List<List<GameObject>> courbes = new List<List<GameObject>>();
+    public List<GameObject> meshes = new List<GameObject>();
     List<Vector3> LastCurvePoints = new List<Vector3>();
 
     public Casteljau decasteljauScript;
@@ -38,6 +40,14 @@ public class PointHandler : MonoBehaviour
     public float extrusionLength = 5f;
 
     private List<Vector3> curvePoints;
+
+    public static bool setMaterialWood = false;
+    public static bool setMaterialMetal = false;
+
+    [SerializeField] private Image woodBorder;
+    [SerializeField] private Image metalBorder;
+    [SerializeField] private Image noneBorder;
+
 
     void Update()
     {
@@ -202,6 +212,9 @@ public class PointHandler : MonoBehaviour
         // Create the extrusion object from the prefab
         GameObject extrusionPath = Instantiate(extrusionPathPrefab);
 
+        extrusionPath.transform.SetParent(parent.transform);
+        meshes.Add(extrusionPath);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionLongCurve extrusionpath = extrusionPath.GetComponent<ExtrusionLongCurve>();
         //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
@@ -212,6 +225,9 @@ public class PointHandler : MonoBehaviour
         // Create the extrusion object from the prefab
         GameObject extrusionAxe = Instantiate(extrusionAxePrefab);
 
+        extrusionAxe.transform.SetParent(parent.transform);
+        meshes.Add(extrusionAxe);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
         //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
@@ -221,6 +237,9 @@ public class PointHandler : MonoBehaviour
     {
         // Create the extrusion object from the prefab
         GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        extrusionObject.transform.SetParent(parent.transform);
+        meshes.Add(extrusionObject);
 
         // Get the ExtrudeBezier component and update the extrusion
         Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
@@ -323,6 +342,37 @@ public class PointHandler : MonoBehaviour
     {
         currentColor = Color.black;
         drawing = true;
+    }
+
+    public void SetMaterialWood()
+    {
+        setMaterialMetal = false;
+        setMaterialWood = true;
+
+        woodBorder.enabled = true;
+        metalBorder.enabled = false;
+        noneBorder.enabled = false;
+    }
+
+    public void SetMaterialMetal()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = true;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = true;
+        noneBorder.enabled = false;
+    }
+
+    public void SetMaterialNone()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = false;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = false;
+        noneBorder.enabled = true;
+
     }
 
     // Méthode pour vérifier si le pointeur de la souris est sur un objet UI
