@@ -18,6 +18,7 @@ public class PointHandler : MonoBehaviour
 
     private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
     public List<List<GameObject>> courbes = new List<List<GameObject>>();
+    public List<GameObject> meshes = new List<GameObject>();
     List<Vector3> LastCurvePoints = new List<Vector3>();
 
     public Casteljau decasteljauScript;
@@ -211,6 +212,9 @@ public class PointHandler : MonoBehaviour
         // Create the extrusion object from the prefab
         GameObject extrusionPath = Instantiate(extrusionPathPrefab);
 
+        extrusionPath.transform.SetParent(parent.transform);
+        meshes.Add(extrusionPath);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionLongCurve extrusionpath = extrusionPath.GetComponent<ExtrusionLongCurve>();
         //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
@@ -221,6 +225,9 @@ public class PointHandler : MonoBehaviour
         // Create the extrusion object from the prefab
         GameObject extrusionAxe = Instantiate(extrusionAxePrefab);
 
+        extrusionAxe.transform.SetParent(parent.transform);
+        meshes.Add(extrusionAxe);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
         //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
@@ -230,6 +237,9 @@ public class PointHandler : MonoBehaviour
     {
         // Create the extrusion object from the prefab
         GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        extrusionObject.transform.SetParent(parent.transform);
+        meshes.Add(extrusionObject);
 
         // Get the ExtrudeBezier component and update the extrusion
         Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();

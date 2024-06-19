@@ -28,34 +28,37 @@ public class Extrusion : MonoBehaviour
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
-        // Générer les sommets
+        // Generate vertices
         foreach (Vector3 point in curvePoints)
         {
-            vertices.Add(new Vector3(point.x, point.y, 0)); // Bas de l'extrusion
-            vertices.Add(new Vector3(point.x * scale, point.y * scale, height)); // Haut de l'extrusion
+            vertices.Add(new Vector3(point.x, point.y, 0)); // Bottom of the extrusion
+            vertices.Add(new Vector3(point.x * scale, point.y * scale, height)); // Top of the extrusion
         }
 
-        // Générer les triangles pour les faces latérales
+        // Generate triangles for the side faces
         for (int i = 0; i < curvePoints.Count - 1; i++)
         {
             int baseIndex = i * 2;
+
+            // Adjust the order of vertices to correct the winding
             triangles.Add(baseIndex);
-            triangles.Add(baseIndex + 2);
             triangles.Add(baseIndex + 1);
+            triangles.Add(baseIndex + 2);
 
             triangles.Add(baseIndex + 1);
-            triangles.Add(baseIndex + 2);
             triangles.Add(baseIndex + 3);
+            triangles.Add(baseIndex + 2);
         }
 
-        // Générer les triangles pour les faces supérieure et inférieure
-        //AddCap(triangles, vertices, true); // Top face
-        //AddCap(triangles, vertices, false); // Bottom face
+        // Generate triangles for the top and bottom faces
+        // Uncomment and implement AddCap if needed
+        // AddCap(triangles, vertices, true); // Top face
+        // AddCap(triangles, vertices, false); // Bottom face
 
-        // Appliquer les vertices et triangles au mesh
+        // Apply vertices and triangles to the mesh
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.ManuallyRecalculateNormals();
+        mesh.RecalculateNormals();
     }
 
     /* void AddCap(List<int> triangles, List<Vector3> vertices, bool isTop)
