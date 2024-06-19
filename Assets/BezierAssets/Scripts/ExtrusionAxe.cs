@@ -78,6 +78,9 @@ public class ExtrusionAxe : MonoBehaviour
             Material material = new Material(Shader.Find("Standard"));
             material.mainTexture = texture;
             meshRenderer.material = material;
+        } else
+        {
+            meshRenderer.material.color = currentColor;
         }
 
         return mesh;

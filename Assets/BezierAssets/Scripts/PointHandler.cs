@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
 using UnityEngine.XR;
+using UnityEngine.UI;
 
 public class PointHandler : MonoBehaviour
 {
@@ -40,7 +41,12 @@ public class PointHandler : MonoBehaviour
     private List<Vector3> curvePoints;
 
     public static bool setMaterialWood = false;
-    public static bool setMaterialMetal = false; 
+    public static bool setMaterialMetal = false;
+
+    [SerializeField] private Image woodBorder;
+    [SerializeField] private Image metalBorder;
+    [SerializeField] private Image noneBorder;
+
 
     void Update()
     {
@@ -332,12 +338,30 @@ public class PointHandler : MonoBehaviour
     {
         setMaterialMetal = false;
         setMaterialWood = true;
+
+        woodBorder.enabled = true;
+        metalBorder.enabled = false;
+        noneBorder.enabled = false;
     }
 
     public void SetMaterialMetal()
     {
         setMaterialWood = false;
         setMaterialMetal = true;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = true;
+        noneBorder.enabled = false;
+    }
+
+    public void SetMaterialNone()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = false;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = false;
+        noneBorder.enabled = true;
 
     }
 
