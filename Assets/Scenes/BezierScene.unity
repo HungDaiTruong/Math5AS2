@@ -5149,7 +5149,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1483318577}
         m_TargetAssemblyTypeName: PointHandler, Assembly-CSharp
-        m_MethodName: SetColorGreen
+        m_MethodName: SetMaterialMetal
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7346,7 +7346,6 @@ MonoBehaviour:
   extrusionAxePrefab: {fileID: 5557338736386918404, guid: e5c47fb96ef52f04b97164168a2f612d, type: 3}
   extrusionPathPrefab: {fileID: 5557338736386918404, guid: 72ed1f8e4736c9b47bc3971513625b11, type: 3}
   extrusionLength: 5
-  setMaterialWood: 0
 --- !u!4 &1483318578
 Transform:
   m_ObjectHideFlags: 0
