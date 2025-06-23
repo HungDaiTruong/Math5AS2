@@ -65,6 +65,7 @@ public class MatriceOperationsV2 : MonoBehaviour
     private GameObject BezierCurveObj;
 
     public CasteljauV2 decasteljauScript;
+    public ChaikinCurve chaikinScript;
 
 
     private new LineRenderer renderer;
@@ -325,8 +326,6 @@ public class MatriceOperationsV2 : MonoBehaviour
 
                 parentGO.transform.localScale *= scalingFctr;
             }
-            
-
         }
         else
         {
@@ -400,8 +399,6 @@ public class MatriceOperationsV2 : MonoBehaviour
             }
 
         }
-
-
     }
 
     private Vector3 CalculateBarycenter(GameObject[] points)
@@ -439,11 +436,16 @@ public class MatriceOperationsV2 : MonoBehaviour
                 decasteljauScript.UpdateDecasteljau(newPoly, BezierCurveObj);
                 print("casteljau function worked");
             }
-/*            else if (BezierCurveObj.name == "PascalBezierCurve")
+            else if (BezierCurveObj.name == "ChaikinCurve")
             {
-                pascalScript.UpdateCurve(newPoly, BezierCurveObj);
-                print("pascal function worked");
-            }*/
+                chaikinScript.UpdateCurve(newPoly);
+                Debug.Log("chaikin function worked");
+            }
+            /*            else if (BezierCurveObj.name == "PascalBezierCurve")
+                        {
+                            pascalScript.UpdateCurve(newPoly, BezierCurveObj);
+                            print("pascal function worked");
+                        }*/
 
         } else
         {
@@ -456,7 +458,7 @@ public class MatriceOperationsV2 : MonoBehaviour
     {
         foreach (Transform child in parent.transform)
         {
-            if (child.gameObject.name == "CasteljauBezierCurve" || child.gameObject.name == "PascalBezierCurve")
+            if (child.gameObject.name == "CasteljauBezierCurve" || child.gameObject.name == "PascalBezierCurve" || child.gameObject.name == "ChaikinCurve")
             {
                 return child.gameObject;
             }
