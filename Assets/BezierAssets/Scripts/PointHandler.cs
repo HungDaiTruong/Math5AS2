@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.AI;
 using UnityEngine.XR;
+using UnityEngine.UI;
 
 public class PointHandler : MonoBehaviour
 {
@@ -15,8 +16,9 @@ public class PointHandler : MonoBehaviour
     private bool drawing = false; // Indique si le dessin est en cours
     public Color currentColor = Color.red; // Couleur actuellement sélectionnée
 
-    private bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
+    public bool isCheckingPolygon = false; // Indique si la vérification des polygones est active
     public List<List<GameObject>> courbes = new List<List<GameObject>>();
+    public List<GameObject> meshes = new List<GameObject>();
     List<Vector3> LastCurvePoints = new List<Vector3>();
 
     public Casteljau decasteljauScript;
@@ -34,10 +36,20 @@ public class PointHandler : MonoBehaviour
     private bool isExtrudingAxe = false;
     private bool isActivePascal = false;
     private bool isZCurve=false;
-    private bool isRevExtruding = false;
+    public bool isRevExtruding = false;
+    private bool isChoosingAxis = false;
     public float extrusionLength = 5f;
+    public Vector3 axisPosition = Vector3.zero;
 
     private List<Vector3> curvePoints;
+
+    public static bool setMaterialWood = false;
+    public static bool setMaterialMetal = false;
+
+    [SerializeField] private Image woodBorder;
+    [SerializeField] private Image metalBorder;
+    [SerializeField] private Image noneBorder;
+
 
     void Update()
     {
@@ -150,12 +162,19 @@ public class PointHandler : MonoBehaviour
                     }
                     else if (isRevExtruding)
                     {
-                        List<Vector3> curvePoints = decasteljauScript.decasteljau ?
-                            decasteljauScript.GetCurvePoints(polygonPoints) :
-                            pascalScript.GetCurvePoints(polygonPoints);
+                        if (isChoosingAxis)
+                        {
+                            Debug.Log("Revolve");
+                            List<Vector3> curvePoints = decasteljauScript.decasteljau ?
+                                decasteljauScript.GetCurvePoints(polygonPoints) :
+                                pascalScript.GetCurvePoints(polygonPoints);
 
-                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
-                        CreateExtrusionAxe(curvePoints, insidePolygon.transform);
+                            decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
+                            CreateExtrusionAxe(curvePoints, insidePolygon.transform, axisPosition);
+
+                            isChoosingAxis = false;
+                        }
+
                     }
                     else if (isLinking)
                     {
@@ -185,6 +204,20 @@ public class PointHandler : MonoBehaviour
                 }
                 else
                 {
+                    if (isRevExtruding)
+                    {
+                        // Vérifier si le clic gauche de la souris est enfoncé et si le dessin est en cours et que la souris n'est pas sur un objet UI
+                        if (Input.GetMouseButtonDown(0) && !isChoosingAxis && !IsPointerOverUIObject())
+                        {
+                            // Obtenir la position de la souris dans l'espace du monde
+                            axisPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                            axisPosition.z = 0f; // S'assurer que la coordonnée z est 0 pour l'espace 2D
+
+                            isChoosingAxis = true;
+                            isCheckingPolygon = true;
+                        }
+                    }
+
                     Debug.Log("Clic à l'extérieur de tous les polygones.");
                 }
             }
@@ -202,25 +235,34 @@ public class PointHandler : MonoBehaviour
         // Create the extrusion object from the prefab
         GameObject extrusionPath = Instantiate(extrusionPathPrefab);
 
+        extrusionPath.transform.SetParent(parent.transform);
+        meshes.Add(extrusionPath);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionLongCurve extrusionpath = extrusionPath.GetComponent<ExtrusionLongCurve>();
         //extrusionpath.ExtrudeAlongCurve(polygonPoints, Path, parent, currentColor);
         extrusionpath.StartAnimation(polygonPoints, Path, extrusionpath.segmentCount, currentColor, 5);
     }
-    private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent)
+    private void CreateExtrusionAxe(List<Vector3> polygonPoints, Transform parent, Vector3 axis)
     {
         // Create the extrusion object from the prefab
         GameObject extrusionAxe = Instantiate(extrusionAxePrefab);
 
+        extrusionAxe.transform.SetParent(parent.transform);
+        meshes.Add(extrusionAxe);
+
         // Get the ExtrudeBezier component and update the extrusion
         ExtrusionAxe extrusionaxe = extrusionAxe.GetComponent<ExtrusionAxe>();
         //extrusionaxe.ExtrudeSurAxe(polygonPoints,parent, currentColor);
-        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, currentColor, 1);
+        extrusionaxe.StartAnimation(polygonPoints, extrusionaxe.segmentCount, axis, currentColor, 1);
     }
     private void CreateAndExtrudeObject(List<Vector3> curvePoints, Transform parent)
     {
         // Create the extrusion object from the prefab
         GameObject extrusionObject = Instantiate(extrusionPrefab);
+
+        extrusionObject.transform.SetParent(parent.transform);
+        meshes.Add(extrusionObject);
 
         // Get the ExtrudeBezier component and update the extrusion
         Extrusion extrusionScript = extrusionObject.GetComponent<Extrusion>();
@@ -323,6 +365,37 @@ public class PointHandler : MonoBehaviour
     {
         currentColor = Color.black;
         drawing = true;
+    }
+
+    public void SetMaterialWood()
+    {
+        setMaterialMetal = false;
+        setMaterialWood = true;
+
+        woodBorder.enabled = true;
+        metalBorder.enabled = false;
+        noneBorder.enabled = false;
+    }
+
+    public void SetMaterialMetal()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = true;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = true;
+        noneBorder.enabled = false;
+    }
+
+    public void SetMaterialNone()
+    {
+        setMaterialWood = false;
+        setMaterialMetal = false;
+
+        woodBorder.enabled = false;
+        metalBorder.enabled = false;
+        noneBorder.enabled = true;
+
     }
 
     // Méthode pour vérifier si le pointeur de la souris est sur un objet UI
