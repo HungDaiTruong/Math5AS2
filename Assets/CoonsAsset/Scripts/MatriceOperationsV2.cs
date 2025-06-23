@@ -64,6 +64,8 @@ public class MatriceOperationsV2 : MonoBehaviour
 
     private GameObject BezierCurveObj;
 
+    public CasteljauV2 decasteljauScript;
+
 
     private new LineRenderer renderer;
     private List<GameObject> newPoly = new List<GameObject>();
@@ -431,18 +433,18 @@ public class MatriceOperationsV2 : MonoBehaviour
         if (BezierCurveObj != null)
         {
 
-/*            print("curve present");
+            print("curve present");
             if (BezierCurveObj.name == "CasteljauBezierCurve")
             {
                 decasteljauScript.UpdateDecasteljau(newPoly, BezierCurveObj);
                 print("casteljau function worked");
-            } else if (BezierCurveObj.name == "PascalBezierCurve")
+            }
+/*            else if (BezierCurveObj.name == "PascalBezierCurve")
             {
                 pascalScript.UpdateCurve(newPoly, BezierCurveObj);
                 print("pascal function worked");
             }*/
-                
-            
+
         } else
         {
             print("curve not present");

@@ -29,6 +29,8 @@ public class PointHandlerV2 : MonoBehaviour
 
     private List<Vector3> curvePoints;
 
+    public CasteljauV2 decasteljauScript;
+
     public static bool setMaterialWood = false;
     public static bool setMaterialMetal = false;
 
@@ -78,7 +80,16 @@ public class PointHandlerV2 : MonoBehaviour
                         polygonPoints.Add(child.gameObject);
                     }
 
-                    if (clearOne)
+                    if (decasteljauScript.decasteljau)
+                    {
+                        decasteljauScript.DrawBezierCurve(polygonPoints, insidePolygon);
+                        decasteljauScript.decasteljau = false;
+                        print("casteljau function worked");
+
+                        List<Vector3> curvePoints = decasteljauScript.GetCurvePoints(polygonPoints);
+                        LastCurvePoints = curvePoints;
+                    }
+                    else if (clearOne)
                     {
                         Destroy(insidePolygon);
                         clearOne = false;
