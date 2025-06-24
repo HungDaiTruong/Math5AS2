@@ -48,23 +48,21 @@ public class ChaikinCurve : MonoBehaviour
 
         List<Vector3> refinedPoints = GetChaikinCurvePoints(controlPoints, iterations);
 
-        // Create the curve object if it doesn't exist yet
-        if (curveObject == null)
-        {
-            curveObject = new GameObject("ChaikinCurve");
-            curveObject.transform.SetParent(parent.transform);
-            curveObject.transform.SetSiblingIndex(0);
-            lineRenderer = curveObject.AddComponent<LineRenderer>();
+        // Create the curve object
+        GameObject chaikinCurveObj = new GameObject("ChaikinCurve");
+        curveObject = chaikinCurveObj;
+        chaikinCurveObj.transform.SetParent(parent.transform);
+        chaikinCurveObj.transform.SetSiblingIndex(0);
+        lineRenderer = chaikinCurveObj.AddComponent<LineRenderer>();
 
-            Material mat = new Material(lineShader);
-            lineRenderer.material = mat;
+        Material mat = new Material(lineShader);
+        lineRenderer.material = mat;
 
-            lineRenderer.startWidth = 0.05f;
-            lineRenderer.endWidth = 0.05f;
-            lineRenderer.numCapVertices = 10;
-            lineRenderer.numCornerVertices = 10;
-            lineRenderer.textureMode = LineTextureMode.Tile;
-        }
+        lineRenderer.startWidth = 0.05f;
+        lineRenderer.endWidth = 0.05f;
+        lineRenderer.numCapVertices = 10;
+        lineRenderer.numCornerVertices = 10;
+        lineRenderer.textureMode = LineTextureMode.Tile;
 
         lineRenderer.startColor = pointHandler.currentColor;
         lineRenderer.endColor = pointHandler.currentColor;
