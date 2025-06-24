@@ -130,7 +130,7 @@ public class PointHandlerV2 : MonoBehaviour
                         {
                             firstPolygonToConnect = insidePolygon;
                             StartCheckingPolygon(); // Wait for second click
-                            Debug.Log("Now click on the polygon to connect to...");
+                            Debug.Log("Now click on the polygon to connect to " + firstPolygonToConnect);
                         }
                         else
                         {
@@ -393,12 +393,5 @@ public class PointHandlerV2 : MonoBehaviour
     {
         isLinking = true;
         linkType = type;
-    }
-
-    public void ConnectPolygons()
-    {
-        isConnectingPolygons = true;
-        StartCheckingPolygon(); // Reuse existing polygon selection logic
-        Debug.Log("Click on the first polygon to connect...");
     }
 }

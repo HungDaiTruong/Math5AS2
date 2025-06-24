@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
@@ -479,42 +480,52 @@ public class MatriceOperationsV2 : MonoBehaviour
 
     public void ConnectPolygons(GameObject polygonA, GameObject polygonB)
     {
-        // Get the point lists from pointHandler
-        List<GameObject> pointsA = null;
-        List<GameObject> pointsB = null;
-
-        foreach (List<GameObject> polygon in pointHandler.courbes)
+        if (polygonA == null || polygonB == null)
         {
-            if (polygon.Contains(polygonA.transform.GetChild(0).gameObject))
-                pointsA = polygon;
-            if (polygon.Contains(polygonB.transform.GetChild(0).gameObject))
-                pointsB = polygon;
-        }
-
-        if (pointsA == null || pointsB == null || pointsA.Count == 0 || pointsB.Count == 0)
-        {
-            Debug.LogWarning("ConnectPolygons failed: could not find valid point lists.");
+            Debug.LogWarning("Both polygons must be provided.");
             return;
         }
 
-        // Get the last point of polygonA and the first point of polygonB
-        Vector3 endA = pointsA[pointsA.Count - 1].transform.position;
-        Vector3 startB = pointsB[0].transform.position;
+        // Get control points of each polygon
+        var pointsA = polygonA.GetComponentsInChildren<Transform>()
+                       .Where(t => t.CompareTag("controlPoint"))
+                       .Select(t => t).ToList();
+        var pointsB = polygonB.GetComponentsInChildren<Transform>()
+                       .Where(t => t.CompareTag("controlPoint"))
+                       .Select(t => t).ToList();
 
-        // Compute offset to move polygonB so that startB aligns with endA
-        Vector3 offset = endA - startB;
-
-        // Move every point of polygonB by the offset
-        foreach (GameObject point in pointsB)
+        if (pointsA.Count == 0 || pointsB.Count == 0)
         {
-            point.transform.position += offset;
+            Debug.LogWarning("One polygon has no control points.");
+            return;
         }
 
-        // Update polygonB's visual line
-        UpdatePolygon(pointsB);
+        // Move A to B (connect last of B to first of A)
+        Vector3 endB = pointsB.Last().position;
+        Vector3 startA = pointsA.First().position;
+        Vector3 offset = endB - startA;
 
-        Debug.Log("Polygons connected successfully.");
+        // Apply offset to polygon A
+        foreach (var t in pointsA)
+            t.position += offset;
+
+        // Update polygonA's LineRenderer after moving its points
+        LineRenderer lr = polygonA.GetComponent<LineRenderer>();
+        if (lr != null)
+        {
+            lr.positionCount = pointsA.Count;
+            for (int i = 0; i < pointsA.Count; i++)
+            {
+                lr.SetPosition(i, pointsA[i].position);
+            }
+        }
+
+        chaikinScript.UpdateCurve(pointsA.Select(t => t.gameObject).ToList(), BezierCurveIsPresent(polygonA));
+
+        Debug.Log("Moved Polygon A to connect with Polygon B using offset {offset}");
     }
+
+
 
     private void ShowMenu()
     {
