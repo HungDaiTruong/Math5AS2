@@ -23,12 +23,12 @@ public class ChaikinCurve : MonoBehaviour
     // Handle keyboard input to increase or decrease iteration count
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (Input.GetKeyDown(KeyCode.KeypadPlus))
         {
             iterations++;
             UpdateCurve(points);
         }
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.KeypadMinus))
         {
             iterations = Mathf.Max(1, iterations - 1);
             UpdateCurve(points);
