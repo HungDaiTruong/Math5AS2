@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class ChaikinCurve : MonoBehaviour
@@ -7,12 +8,13 @@ public class ChaikinCurve : MonoBehaviour
     public Shader lineShader;
     public PointHandlerV2 pointHandler;
 
-    private GameObject curveObject;
+    public GameObject curveObject;
     private LineRenderer lineRenderer;
 
     public bool chaikin = false;
 
-    private List<GameObject> points = new List<GameObject>();
+    public List<GameObject> points = new List<GameObject>();
+    public List<Vector3> refinedPoints = new List<Vector3>();
 
     // Activate the Chaikin curve drawing mode
     public void ActivateChaikin()
@@ -26,12 +28,12 @@ public class ChaikinCurve : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.KeypadPlus))
         {
             iterations++;
-            UpdateCurve(points);
+            UpdateCurve(points, curveObject);
         }
         if (Input.GetKeyDown(KeyCode.KeypadMinus))
         {
             iterations = Mathf.Max(1, iterations - 1);
-            UpdateCurve(points);
+            UpdateCurve(points, curveObject);
         }
     }
 
@@ -46,7 +48,7 @@ public class ChaikinCurve : MonoBehaviour
             return;
         }
 
-        List<Vector3> refinedPoints = GetChaikinCurvePoints(controlPoints, iterations);
+        refinedPoints = GetChaikinCurvePoints(controlPoints, iterations);
 
         // Create the curve object
         GameObject chaikinCurveObj = new GameObject("ChaikinCurve");
@@ -73,15 +75,18 @@ public class ChaikinCurve : MonoBehaviour
     }
 
     // Redraw the curve with updated control points or iteration level
-    public void UpdateCurve(List<GameObject> updatedPoints)
+    public void UpdateCurve(List<GameObject> updatedPoints, GameObject curveObj)
     {
+        lineRenderer = curveObj.GetComponent<LineRenderer>();
+        curveObject = curveObj;
+
         if (curveObject == null || updatedPoints.Count < 2) return;
 
         points = updatedPoints;
 
         pointHandler.drawable.ClearCanvas();
 
-        List<Vector3> refinedPoints = GetChaikinCurvePoints(points, iterations);
+        refinedPoints = GetChaikinCurvePoints(points, iterations);
         lineRenderer.positionCount = refinedPoints.Count;
         lineRenderer.SetPositions(refinedPoints.ToArray());
 
@@ -130,10 +135,11 @@ public class ChaikinCurve : MonoBehaviour
     // Clear the curve and canvas
     public void ClearCurve()
     {
-        if (curveObject != null)
+        LineRenderer[] lineRenderers = FindObjectsOfType<LineRenderer>();
+
+        foreach (LineRenderer lineRenderer in lineRenderers)
         {
-            Destroy(curveObject);
-            pointHandler.drawable.ClearCanvas();
+            lineRenderer.positionCount = 0;
         }
     }
 }

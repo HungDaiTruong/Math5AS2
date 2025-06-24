@@ -30,13 +30,13 @@ public class CasteljauV2 : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.KeypadPlus))
         {
-            stepSize += stepSizeChangeAmount;
+            stepSize -= stepSizeChangeAmount;
             UpdateStep();
         }
 
         if (Input.GetKeyDown(KeyCode.KeypadMinus))
         {
-            stepSize -= stepSizeChangeAmount;
+            stepSize += stepSizeChangeAmount;
             stepSize = Mathf.Max(stepSize, 0.001f);
             UpdateStep();
         }

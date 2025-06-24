@@ -11,7 +11,7 @@ public class PointHandlerV2 : MonoBehaviour
 {
     public GameObject pointPrefab; // Prefab pour l'objet point
     public List<GameObject> points = new List<GameObject>(); // Liste pour stocker les points
-    private List<GameObject> lines = new List<GameObject>(); // Liste pour stocker les objets ligne (polygones)
+    public List<GameObject> lines = new List<GameObject>(); // Liste pour stocker les objets ligne (polygones)
 
     public bool drawing = false; // Indique si le dessin est en cours
     public Color currentColor = Color.red; // Couleur actuellement sélectionnée
@@ -28,12 +28,16 @@ public class PointHandlerV2 : MonoBehaviour
     public bool isLinking = false;
     public int linkType;
 
+    private GameObject firstPolygonToConnect = null;
+    private bool isConnectingPolygons = false;
+
     public Vector3 axisPosition = Vector3.zero;
 
     private List<Vector3> curvePoints;
 
     public CasteljauV2 decasteljauScript;
     public ChaikinCurve chaikinScript;
+    public MatriceOperationsV2 matrixOperation;
 
     public static bool setMaterialWood = false;
     public static bool setMaterialMetal = false;
@@ -72,6 +76,7 @@ public class PointHandlerV2 : MonoBehaviour
                 isCheckingPolygon = false;
                 LastCurvePoints.Clear();
                 GameObject insidePolygon = IsInsidePolygon();
+
                 if (insidePolygon != null)
                 {
                     Debug.Log("Clic à l'intérieur du polygone : " + insidePolygon.name);
@@ -119,6 +124,27 @@ public class PointHandlerV2 : MonoBehaviour
                         isLinking = false;
                         drawing = true;
                     }
+                    else if (isConnectingPolygons)
+                    {
+                        if (firstPolygonToConnect == null)
+                        {
+                            firstPolygonToConnect = insidePolygon;
+                            StartCheckingPolygon(); // Wait for second click
+                            Debug.Log("Now click on the polygon to connect to...");
+                        }
+                        else
+                        {
+                            GameObject secondPolygon = insidePolygon;
+                            matrixOperation.ConnectPolygons(firstPolygonToConnect, secondPolygon);
+
+                            // Reset connection state
+                            firstPolygonToConnect = null;
+                            isConnectingPolygons = false;
+                            insidePolygon = null;
+                            Debug.Log("Polygons connected.");
+                        }
+                        return;
+                    }
                     else if (clearOne)
                     {
                         Destroy(insidePolygon);
@@ -135,6 +161,11 @@ public class PointHandlerV2 : MonoBehaviour
     public void ClearOne()
     {
         clearOne = true;
+    }
+
+    public void ActivateConnectPolygons()
+    {
+        isConnectingPolygons |= true;
     }
 
     // Méthode pour connecter les points pour former un polygone
@@ -362,5 +393,12 @@ public class PointHandlerV2 : MonoBehaviour
     {
         isLinking = true;
         linkType = type;
+    }
+
+    public void ConnectPolygons()
+    {
+        isConnectingPolygons = true;
+        StartCheckingPolygon(); // Reuse existing polygon selection logic
+        Debug.Log("Click on the first polygon to connect...");
     }
 }

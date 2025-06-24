@@ -81,6 +81,10 @@ public class MatriceOperationsV2 : MonoBehaviour
 
     private void Update()
     {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            HideMenu();
+        }
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -141,8 +145,6 @@ public class MatriceOperationsV2 : MonoBehaviour
 
                 newPoly = FindPolygon(selectedObject);
                 UpdatePolygon(newPoly);
-
-
             }
 
             if (selectedObject != null) { 
@@ -412,7 +414,7 @@ public class MatriceOperationsV2 : MonoBehaviour
         return barycenter;
     }
 
-    private void UpdatePolygon(List<GameObject> selectedPolygon)
+    public void UpdatePolygon(List<GameObject> polygonPoints)
     {
         //pour modifier les lignes du polygone
         renderer = selectedObject.transform.parent.GetComponent<LineRenderer>();
@@ -423,7 +425,7 @@ public class MatriceOperationsV2 : MonoBehaviour
             renderer.SetPosition(i, newPoly[i].transform.position);
             newPoly[i].transform.parent = selectedObject.transform.parent.transform;
         }
-        renderer.sortingOrder = 1; 
+        renderer.sortingOrder = 1;
 
         //pour modifier la courbe
         BezierCurveObj = BezierCurveIsPresent(selectedObject.transform.parent.gameObject);
@@ -438,20 +440,14 @@ public class MatriceOperationsV2 : MonoBehaviour
             }
             else if (BezierCurveObj.name == "ChaikinCurve")
             {
-                chaikinScript.UpdateCurve(newPoly);
-                Debug.Log("chaikin function worked");
+                chaikinScript.UpdateCurve(newPoly, BezierCurveObj);
+                print("chaikin function worked");
             }
-            /*            else if (BezierCurveObj.name == "PascalBezierCurve")
-                        {
-                            pascalScript.UpdateCurve(newPoly, BezierCurveObj);
-                            print("pascal function worked");
-                        }*/
-
-        } else
+        }
+        else
         {
             print("curve not present");
         }
-        
     }
 
     private GameObject BezierCurveIsPresent(GameObject parent)
@@ -479,6 +475,45 @@ public class MatriceOperationsV2 : MonoBehaviour
             }
         }
         return null; 
+    }
+
+    public void ConnectPolygons(GameObject polygonA, GameObject polygonB)
+    {
+        // Get the point lists from pointHandler
+        List<GameObject> pointsA = null;
+        List<GameObject> pointsB = null;
+
+        foreach (List<GameObject> polygon in pointHandler.courbes)
+        {
+            if (polygon.Contains(polygonA.transform.GetChild(0).gameObject))
+                pointsA = polygon;
+            if (polygon.Contains(polygonB.transform.GetChild(0).gameObject))
+                pointsB = polygon;
+        }
+
+        if (pointsA == null || pointsB == null || pointsA.Count == 0 || pointsB.Count == 0)
+        {
+            Debug.LogWarning("ConnectPolygons failed: could not find valid point lists.");
+            return;
+        }
+
+        // Get the last point of polygonA and the first point of polygonB
+        Vector3 endA = pointsA[pointsA.Count - 1].transform.position;
+        Vector3 startB = pointsB[0].transform.position;
+
+        // Compute offset to move polygonB so that startB aligns with endA
+        Vector3 offset = endA - startB;
+
+        // Move every point of polygonB by the offset
+        foreach (GameObject point in pointsB)
+        {
+            point.transform.position += offset;
+        }
+
+        // Update polygonB's visual line
+        UpdatePolygon(pointsB);
+
+        Debug.Log("Polygons connected successfully.");
     }
 
     private void ShowMenu()
