@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ChaikinCurve : MonoBehaviour
 {
-    public int iterations = 3;
+    public int iterations = 3; // Number of times to refine the curve
     public Shader lineShader;
     public PointHandlerV2 pointHandler;
 
@@ -14,11 +14,13 @@ public class ChaikinCurve : MonoBehaviour
 
     private List<GameObject> points = new List<GameObject>();
 
+    // Activate the Chaikin curve drawing mode
     public void ActivateChaikin()
     {
         chaikin = true;
     }
 
+    // Handle keyboard input to increase or decrease iteration count
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
@@ -33,6 +35,7 @@ public class ChaikinCurve : MonoBehaviour
         }
     }
 
+    // Draw the Chaikin curve based on input control points
     public void DrawChaikinCurve(List<GameObject> controlPoints, GameObject parent)
     {
         points = controlPoints;
@@ -45,6 +48,7 @@ public class ChaikinCurve : MonoBehaviour
 
         List<Vector3> refinedPoints = GetChaikinCurvePoints(controlPoints, iterations);
 
+        // Create the curve object if it doesn't exist yet
         if (curveObject == null)
         {
             curveObject = new GameObject("ChaikinCurve");
@@ -70,6 +74,7 @@ public class ChaikinCurve : MonoBehaviour
         pointHandler.drawable.paintInPixels(refinedPoints);
     }
 
+    // Redraw the curve with updated control points or iteration level
     public void UpdateCurve(List<GameObject> updatedPoints)
     {
         if (curveObject == null || updatedPoints.Count < 2) return;
@@ -85,34 +90,46 @@ public class ChaikinCurve : MonoBehaviour
         pointHandler.drawable.paintInPixels(refinedPoints);
     }
 
+    // Core algorithm: performs Chaikin's Corner Cutting
     public List<Vector3> GetChaikinCurvePoints(List<GameObject> controlPoints, int numIterations)
     {
+        // Convert GameObjects to their positions
         List<Vector3> currentPoints = new List<Vector3>();
         foreach (var obj in controlPoints)
         {
             currentPoints.Add(obj.transform.position);
         }
 
+        // Perform iterative refinement
         for (int it = 0; it < numIterations; it++)
         {
             List<Vector3> newPoints = new List<Vector3>();
+
+            // Apply Chaikin's algorithm between each pair of points
             for (int i = 0; i < currentPoints.Count - 1; i++)
             {
                 Vector3 p0 = currentPoints[i];
                 Vector3 p1 = currentPoints[i + 1];
 
+                // Q is 25% from p0 toward p1
                 Vector3 Q = Vector3.Lerp(p0, p1, 0.25f);
+
+                // R is 75% from p0 toward p1 (or 25% from p1 toward p0)
                 Vector3 R = Vector3.Lerp(p0, p1, 0.75f);
 
+                // These two new points replace the original edge
                 newPoints.Add(Q);
                 newPoints.Add(R);
             }
+
+            // Replace current points with new ones for next iteration
             currentPoints = newPoints;
         }
 
         return currentPoints;
     }
 
+    // Clear the curve and canvas
     public void ClearCurve()
     {
         if (curveObject != null)
