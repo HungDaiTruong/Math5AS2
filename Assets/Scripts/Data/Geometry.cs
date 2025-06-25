@@ -84,11 +84,13 @@ namespace Data
             {
                 if (!Vertices.Contains(edge.StartPoint))
                 {
+                    edge.StartPoint.Faces.Add(this);
                     Vertices.Add(edge.StartPoint);
                 }
 
                 if (!Vertices.Contains(edge.EndPoint))
                 {
+                    edge.EndPoint.Faces.Add(this);
                     Vertices.Add(edge.EndPoint);
                 }
             }
@@ -160,8 +162,15 @@ namespace Data
 
             foreach (Edge existingEdge in existingEdges)
             {
-                
+                foreach(Face face in Faces)
+                {
+                    var index = face.Edges.FindIndex(e => e.StartPoint == existingEdge.StartPoint && e.EndPoint == existingEdge.EndPoint ||
+                                                        e.StartPoint == existingEdge.EndPoint && e.EndPoint == existingEdge.StartPoint);
+                    if (index == -1) continue;
+                    existingEdge.Faces.Add(face);
+                }
             }
+            Debug.Log("Test");
         }
 
         public static Geometry GetCube()
@@ -354,25 +363,32 @@ namespace Data
                     {
                         firstPoint = relatedEdgePoints[i].Point;
                         thirdPoint = relatedEdgePoints[0].Point;
+                        secondPoint = vertexPoints.Find(vp => vp.RelatedEdges.FindIndex( e => e == relatedEdgePoints[i].RelatedEdge) != -1 &&
+                                                              vp.RelatedEdges.FindIndex( e => e == relatedEdgePoints[0].RelatedEdge) != -1).Point;
                     }
                     else
                     {
                         firstPoint = relatedEdgePoints[i].Point;
                         thirdPoint = relatedEdgePoints[i + 1].Point;
+                        secondPoint = vertexPoints.Find(vp => vp.RelatedEdges.FindIndex( e => e == relatedEdgePoints[i].RelatedEdge) != -1 &&
+                                                              vp.RelatedEdges.FindIndex( e => e == relatedEdgePoints[i + 1].RelatedEdge) != -1).Point;
                     }
-
-                    foreach (VertexPoint vertexPoint in vertexPoints)
-                    {
-                        // if (vertexPoint.RelatedEdges.)
-                    }
-                    // faces.Add(new Face(new List<Edge>
-                    //     {
-                    //         new Edge(new Vertex(origin), new Vertex(firstPoint)),
-                    //         new Edge(new Vertex(firstPoint), new Vertex(secondPoint)),
-                    //         new Edge(new Vertex(secondPoint), new Vertex(thirdPoint)),
-                    //         new Edge(new Vertex(thirdPoint), new Vertex(origin))
-                    //     }
-                    // ));
+                    
+                    faces.Add(new Face(new List<Edge>
+                        {
+                            new Edge(new Vertex(origin), new Vertex(firstPoint)),
+                            new Edge(new Vertex(firstPoint), new Vertex(secondPoint)),
+                            new Edge(new Vertex(secondPoint), new Vertex(origin)),
+                        }
+                    ));
+                    
+                    faces.Add(new Face(new List<Edge>
+                        {
+                            new Edge(new Vertex(origin), new Vertex(secondPoint)),
+                            new Edge(new Vertex(secondPoint), new Vertex(thirdPoint)),
+                            new Edge(new Vertex(thirdPoint), new Vertex(origin)),
+                        }
+                    ));
                 }
                 
                 
