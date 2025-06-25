@@ -11,7 +11,7 @@ public class SubdivisionTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var cube = Geometry.GetCube();
+        var cube = Geometry.GetCube().CatmullClarkSubdivision();
         var mesh = cube.ToMesh();
         meshFilter.mesh = mesh;
         meshRenderer.material = new Material(Shader.Find("Standard"));
