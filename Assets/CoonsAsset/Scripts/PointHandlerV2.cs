@@ -29,7 +29,14 @@ public class PointHandlerV2 : MonoBehaviour
     public int linkType;
 
     private GameObject firstPolygonToConnect = null;
-    private bool isConnectingPolygons = false;
+    public bool isConnectingPolygons = false;
+
+    private GameObject firstPointToConnect = null;
+    public bool isConnectingPoints = false;
+
+    public bool isConnectingCurves = false;
+
+    public bool isConnectingCurvePoints = false;
 
     public Vector3 axisPosition = Vector3.zero;
 
@@ -145,6 +152,27 @@ public class PointHandlerV2 : MonoBehaviour
                         }
                         return;
                     }
+                    else if (isConnectingCurves)
+                    {
+                        if (firstPolygonToConnect == null)
+                        {
+                            firstPolygonToConnect = insidePolygon;
+                            StartCheckingPolygon(); // Wait for second click
+                            Debug.Log("Now click on the polygon to connect to " + firstPolygonToConnect);
+                        }
+                        else
+                        {
+                            GameObject secondPolygon = insidePolygon;
+                            matrixOperation.ConnectCurves(firstPolygonToConnect, secondPolygon);
+
+                            // Reset connection state
+                            firstPolygonToConnect = null;
+                            isConnectingCurves = false;
+                            insidePolygon = null;
+                            Debug.Log("Curves connected.");
+                        }
+                        return;
+                    }
                     else if (clearOne)
                     {
                         Destroy(insidePolygon);
@@ -154,7 +182,64 @@ public class PointHandlerV2 : MonoBehaviour
                         print("cleared one polygon");
                     }
                 }
-            } 
+            }
+
+            if (isConnectingPoints && Input.GetMouseButtonDown(0))
+            {
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    if (hit.collider.gameObject.CompareTag("controlPoint"))
+                    {
+                        if (firstPointToConnect == null)
+                        {
+                            firstPointToConnect = hit.collider.gameObject;
+                            Debug.Log("Now click on the point to connect to " + hit.collider.gameObject);
+                        }
+                        else
+                        {
+                            GameObject secondPoint = hit.collider.gameObject;
+                            matrixOperation.ConnectPoints(firstPointToConnect, secondPoint);
+
+                            // Reset connection state
+                            firstPointToConnect = null;
+                            isConnectingPoints = false;
+                            Debug.Log("Points connected.");
+                        }
+                        return;
+                    }
+                }
+            }
+            else if (isConnectingCurvePoints && Input.GetMouseButtonDown(0))
+            {
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    if (hit.collider.gameObject.CompareTag("controlPoint"))
+                    {
+                        if (firstPointToConnect == null)
+                        {
+                            firstPointToConnect = hit.collider.gameObject;
+                            Debug.Log("Now click on the point to connect to " + hit.collider.gameObject);
+                        }
+                        else
+                        {
+                            GameObject secondPoint = hit.collider.gameObject;
+                            matrixOperation.ConnectCurvePoints(firstPointToConnect, secondPoint);
+
+                            // Reset connection state
+                            firstPointToConnect = null;
+                            isConnectingCurvePoints = false;
+                            Debug.Log("Curve Points connected.");
+                        }
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -166,6 +251,21 @@ public class PointHandlerV2 : MonoBehaviour
     public void ActivateConnectPolygons()
     {
         isConnectingPolygons |= true;
+    }
+
+    public void ActivateConnectPoints()
+    {
+        isConnectingPoints |= true;
+    }
+
+    public void ActivateConnectCurves()
+    {
+        isConnectingCurves |= true;
+    }
+
+    public void ActivateConnectCurvePoints()
+    {
+        isConnectingCurvePoints |= true;
     }
 
     // Méthode pour connecter les points pour former un polygone

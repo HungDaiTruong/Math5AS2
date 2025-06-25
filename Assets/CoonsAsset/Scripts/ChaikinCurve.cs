@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ChaikinCurve : MonoBehaviour
 {
-    public int iterations = 3; // Number of times to refine the curve
+    public int iterations = 1;
     public Shader lineShader;
     public PointHandlerV2 pointHandler;
 
@@ -15,6 +15,22 @@ public class ChaikinCurve : MonoBehaviour
 
     public List<GameObject> points = new List<GameObject>();
     public List<Vector3> refinedPoints = new List<Vector3>();
+
+    // NEW: Store all curves
+    private Dictionary<GameObject, CurveData> curveRegistry = new Dictionary<GameObject, CurveData>();
+
+    // CurveData will store the info we need for lookup
+    private class CurveData
+    {
+        public GameObject curveObj;
+        public List<GameObject> controlPoints;
+
+        public CurveData(GameObject curveObj, List<GameObject> controlPoints)
+        {
+            this.curveObj = curveObj;
+            this.controlPoints = controlPoints;
+        }
+    }
 
     // Activate the Chaikin curve drawing mode
     public void ActivateChaikin()
@@ -50,7 +66,6 @@ public class ChaikinCurve : MonoBehaviour
 
         refinedPoints = GetChaikinCurvePoints(controlPoints, iterations);
 
-        // Create the curve object
         GameObject chaikinCurveObj = new GameObject("ChaikinCurve");
         curveObject = chaikinCurveObj;
         chaikinCurveObj.transform.SetParent(parent.transform);
@@ -72,7 +87,15 @@ public class ChaikinCurve : MonoBehaviour
         lineRenderer.SetPositions(refinedPoints.ToArray());
 
         pointHandler.drawable.paintInPixels(refinedPoints);
+
+        // Register this curve
+        GameObject polygonParent = controlPoints[0].transform.parent.gameObject;
+        if (!curveRegistry.ContainsKey(polygonParent))
+        {
+            curveRegistry.Add(polygonParent, new CurveData(chaikinCurveObj, new List<GameObject>(controlPoints)));
+        }
     }
+
 
     // Redraw the curve with updated control points or iteration level
     public void UpdateCurve(List<GameObject> updatedPoints, GameObject curveObj)
@@ -130,6 +153,29 @@ public class ChaikinCurve : MonoBehaviour
         }
 
         return currentPoints;
+    }
+
+    public List<GameObject> GetControlPointsForPolygon(GameObject polygonObj)
+    {
+        if (curveRegistry.TryGetValue(polygonObj, out CurveData data))
+        {
+            return data.controlPoints;
+        }
+        return null;
+    }
+
+    public bool TryGetCurveByPolygon(GameObject polygonObj, out List<Vector3> refinedCurve, out GameObject curveGO)
+    {
+        if (curveRegistry.TryGetValue(polygonObj, out CurveData data))
+        {
+            refinedCurve = GetChaikinCurvePoints(data.controlPoints, iterations);
+            curveGO = data.curveObj;
+            return true;
+        }
+
+        refinedCurve = null;
+        curveGO = null;
+        return false;
     }
 
     // Clear the curve and canvas

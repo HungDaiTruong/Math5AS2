@@ -31,7 +31,7 @@ public class MatriceOperationsV2 : MonoBehaviour
     private bool isDragging = false;
     public bool deletePoint = false;
 
-    private GameObject selectedObject;
+    public GameObject selectedObject;
     private Vector3 lastMousePosition;
 
     [Header("Translation Settings")]
@@ -400,7 +400,6 @@ public class MatriceOperationsV2 : MonoBehaviour
                 Vector3 shearAmount = shearVector * shearingSpeed * Time.deltaTime;
                 selectedObject.transform.position += shearAmount;
             }
-
         }
     }
 
@@ -417,14 +416,14 @@ public class MatriceOperationsV2 : MonoBehaviour
 
     public void UpdatePolygon(List<GameObject> polygonPoints)
     {
-        //pour modifier les lignes du polygone
-        renderer = selectedObject.transform.parent.GetComponent<LineRenderer>();
+        // pour modifier les lignes du polygone
+        LineRenderer renderer = selectedObject.transform.parent.GetComponent<LineRenderer>();
 
-        renderer.positionCount = newPoly.Count;
+        renderer.positionCount = polygonPoints.Count;
         for (int i = 0; i < newPoly.Count; i++)
         {
             renderer.SetPosition(i, newPoly[i].transform.position);
-            newPoly[i].transform.parent = selectedObject.transform.parent.transform;
+            polygonPoints[i].transform.parent = selectedObject.transform.parent.transform;
         }
         renderer.sortingOrder = 1;
 
@@ -432,7 +431,6 @@ public class MatriceOperationsV2 : MonoBehaviour
         BezierCurveObj = BezierCurveIsPresent(selectedObject.transform.parent.gameObject);
         if (BezierCurveObj != null)
         {
-
             print("curve present");
             if (BezierCurveObj.name == "CasteljauBezierCurve")
             {
@@ -450,6 +448,30 @@ public class MatriceOperationsV2 : MonoBehaviour
             print("curve not present");
         }
     }
+
+    public void ManualUpdatePolygon(List<GameObject> controlPoints)
+    {
+        if (controlPoints == null || controlPoints.Count < 2) return;
+
+        GameObject polygonObj = controlPoints[0].transform.parent.gameObject;
+        LineRenderer polyLine = polygonObj.GetComponent<LineRenderer>();
+        if (polyLine == null)
+        {
+            Debug.LogWarning("Polygon GameObject does not have a LineRenderer.");
+            return;
+        }
+
+        Vector3[] positions = controlPoints.Select(p => p.transform.position).ToArray();
+
+        polyLine.positionCount = positions.Length + 1;
+        for (int i = 0; i < positions.Length; i++)
+        {
+            polyLine.SetPosition(i, positions[i]);
+        }
+        // Close the loop
+        polyLine.SetPosition(positions.Length, positions[0]);
+    }
+
 
     private GameObject BezierCurveIsPresent(GameObject parent)
     {
@@ -524,6 +546,157 @@ public class MatriceOperationsV2 : MonoBehaviour
 
         Debug.Log("Moved Polygon A to connect with Polygon B using offset {offset}");
     }
+
+    public void ConnectPoints(GameObject pointA, GameObject pointB)
+    {
+        // Need to fix the Polygon Curve Update
+
+        if (pointA == null || pointB == null)
+        {
+            Debug.LogWarning("Both points must be provided.");
+            return;
+        }
+
+        // Calculate offset from A to B
+        Vector3 offset = pointB.transform.position - pointA.transform.position;
+
+        // Move pointA to pointB
+        pointA.transform.position += offset;
+
+        // Find and update the polygon pointA belongs to
+        UpdatePolygon(FindPolygon(pointA));
+
+        chaikinScript.UpdateCurve(FindPolygon(pointA).ToList(), BezierCurveIsPresent(pointA.transform.parent.gameObject));
+
+        Debug.Log($"Moved Point A to align with Point B using offset {offset}");
+    }
+
+    public void ConnectCurves(GameObject polygonA, GameObject polygonB)
+    {
+        if (polygonA == null || polygonB == null)
+        {
+            Debug.LogWarning("Both polygons must be provided.");
+            return;
+        }
+
+        GameObject curveA = BezierCurveIsPresent(polygonA);
+        GameObject curveB = BezierCurveIsPresent(polygonB);
+
+        if (curveA == null || curveB == null)
+        {
+            Debug.LogWarning("Both polygons must have a Chaikin curve to connect.");
+            return;
+        }
+
+        if (curveA.name != "ChaikinCurve" || curveB.name != "ChaikinCurve")
+        {
+            Debug.LogWarning("Both curves must be Chaikin curves.");
+            return;
+        }
+
+        LineRenderer curveRendererA = curveA.GetComponent<LineRenderer>();
+        LineRenderer curveRendererB = curveB.GetComponent<LineRenderer>();
+
+        if (curveRendererA.positionCount == 0 || curveRendererB.positionCount == 0)
+        {
+            Debug.LogWarning("One of the curves has no points.");
+            return;
+        }
+
+        Vector3 startA = curveRendererA.GetPosition(0);
+        Vector3 endB = curveRendererB.GetPosition(curveRendererB.positionCount - 1);
+
+        Vector3 offset = endB - startA;
+
+        // Move polygonA's control points by the offset
+        var pointsA = polygonA.GetComponentsInChildren<Transform>()
+                       .Where(t => t.CompareTag("controlPoint"))
+                       .ToList();
+
+        foreach (var point in pointsA)
+            point.position += offset;
+
+        // Also update the Chaikin curve
+        var chaikinCurveManager = FindObjectOfType<ChaikinCurve>();
+        if (chaikinCurveManager != null)
+        {
+            chaikinCurveManager.UpdateCurve(pointsA.Select(t => t.gameObject).ToList(), curveA);
+        }
+
+        List<GameObject> pointObjsA = pointsA.Select(t => t.gameObject).ToList();
+        ManualUpdatePolygon(pointObjsA); // Updates wireframe
+        chaikinCurveManager.UpdateCurve(pointObjsA, curveA); // Updates Chaikin curve
+
+
+        Debug.Log($"Moved Polygon A's Chaikin curve to connect with Polygon B. Offset: {offset}");
+    }
+
+
+    public void ConnectCurvePoints(GameObject pointA, GameObject pointB)
+    {
+        if (pointA == null || pointB == null)
+        {
+            Debug.LogWarning("Both points must be provided.");
+            return;
+        }
+
+        GameObject polygonObjA = pointA.transform.parent.gameObject;
+        GameObject polygonObjB = pointB.transform.parent.gameObject;
+
+        ChaikinCurve chaikinCurveManager = FindObjectOfType<ChaikinCurve>();
+        if (chaikinCurveManager == null)
+        {
+            Debug.LogWarning("ChaikinCurve manager not found.");
+            return;
+        }
+
+        // Get Chaikin curves
+        if (!chaikinCurveManager.TryGetCurveByPolygon(polygonObjA, out List<Vector3> curvePointsA, out GameObject curveObjA)
+            || !chaikinCurveManager.TryGetCurveByPolygon(polygonObjB, out List<Vector3> curvePointsB, out _))
+        {
+            Debug.LogWarning("One or both curves not found in registry.");
+            return;
+        }
+
+        // Target is the START of polygon B's Chaikin curve
+        Vector3 targetPosition = curvePointsB.First();
+
+        // Get control points of polygon A
+        List<GameObject> polygonAPoints = chaikinCurveManager.GetControlPointsForPolygon(polygonObjA);
+        if (polygonAPoints == null || polygonAPoints.Count < 1)
+        {
+            Debug.LogWarning("Polygon A control points are missing or invalid.");
+            return;
+        }
+
+        GameObject lastControlPoint = polygonAPoints[polygonAPoints.Count - 1];
+
+        // Iteratively adjust last control point to align curve end with target
+        const int maxIterations = 10;
+        const float threshold = 0.001f;
+
+        for (int i = 0; i < maxIterations; i++)
+        {
+            // Recalculate A's curve
+            List<Vector3> updatedCurve = chaikinCurveManager.GetChaikinCurvePoints(polygonAPoints, chaikinCurveManager.iterations);
+            Vector3 currentEnd = updatedCurve.Last();
+
+            Vector3 diff = targetPosition - currentEnd;
+
+            if (diff.magnitude < threshold)
+                break;
+
+            // Move the control point a bit closer
+            lastControlPoint.transform.position += diff;
+        }
+
+        // Final update to make sure curve and polygon visuals are synced
+        chaikinCurveManager.UpdateCurve(polygonAPoints, curveObjA);
+        ManualUpdatePolygon(polygonAPoints); // Also update polygon's outline
+
+        Debug.Log("Connected Polygon A's curve end to Polygon B's curve start.");
+    }
+
 
 
 
