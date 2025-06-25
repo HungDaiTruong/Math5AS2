@@ -38,6 +38,10 @@ public class PointHandlerV2 : MonoBehaviour
 
     public bool isConnectingCurvePoints = false;
 
+    public List<GameObject> coonSelectedCurves = new List<GameObject>();
+    public bool isSelectingCoonCurves = false;
+
+
     public Vector3 axisPosition = Vector3.zero;
 
     private List<Vector3> curvePoints;
@@ -173,6 +177,28 @@ public class PointHandlerV2 : MonoBehaviour
                         }
                         return;
                     }
+                    else if (isSelectingCoonCurves)
+                    {
+                        isCheckingPolygon = true;
+
+                        if (!coonSelectedCurves.Contains(insidePolygon))
+                        {
+                            coonSelectedCurves.Add(insidePolygon);
+                            Debug.Log($"Selected curve {coonSelectedCurves.Count}/4 for Coon patch.");
+                        }
+
+                        if (coonSelectedCurves.Count == 4)
+                        {
+                            isSelectingCoonCurves = false;
+                            isCheckingPolygon = false;
+
+                            // Call the function to create the Coon mesh
+                            chaikinScript.CreateCoonMesh(coonSelectedCurves);
+                            coonSelectedCurves.Clear(); // reset for next use
+                            Debug.Log("Coon patch created.");
+                        }
+                        return;
+                    }
                     else if (clearOne)
                     {
                         Destroy(insidePolygon);
@@ -266,6 +292,10 @@ public class PointHandlerV2 : MonoBehaviour
     public void ActivateConnectCurvePoints()
     {
         isConnectingCurvePoints |= true;
+    }
+    public void ActivateCoonMesh()
+    {
+        StartCoonCurveSelection();
     }
 
     // Méthode pour connecter les points pour former un polygone
@@ -405,6 +435,15 @@ public class PointHandlerV2 : MonoBehaviour
         }
         return inside;
     }
+
+    public void StartCoonCurveSelection()
+    {
+        coonSelectedCurves.Clear();
+        isSelectingCoonCurves = true;
+        isCheckingPolygon = true;
+        Debug.Log("Select 4 Chaikin curves (click on their polygons).");
+    }
+
 
     // Méthode pour le raccordement C0
     public void C0Link(List<GameObject> polygonPoints)

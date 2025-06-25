@@ -44,14 +44,15 @@ public class ChaikinCurve : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.KeypadPlus))
         {
             iterations++;
-            UpdateCurve(points, curveObject);
+            RedrawAllCurves();
         }
         if (Input.GetKeyDown(KeyCode.KeypadMinus))
         {
             iterations = Mathf.Max(1, iterations - 1);
-            UpdateCurve(points, curveObject);
+            RedrawAllCurves();
         }
     }
+
 
     // Draw the Chaikin curve based on input control points
     public void DrawChaikinCurve(List<GameObject> controlPoints, GameObject parent)
@@ -116,6 +117,20 @@ public class ChaikinCurve : MonoBehaviour
         pointHandler.drawable.paintInPixels(refinedPoints);
     }
 
+    private void RedrawAllCurves()
+    {
+        foreach (var entry in curveRegistry)
+        {
+            GameObject parent = entry.Key;
+            CurveData data = entry.Value;
+            List<GameObject> controlPoints = data.controlPoints;
+            GameObject curveObj = data.curveObj;
+
+            UpdateCurve(controlPoints, curveObj);
+        }
+    }
+
+
     // Core algorithm: performs Chaikin's Corner Cutting
     public List<Vector3> GetChaikinCurvePoints(List<GameObject> controlPoints, int numIterations)
     {
@@ -177,6 +192,175 @@ public class ChaikinCurve : MonoBehaviour
         curveGO = null;
         return false;
     }
+
+    public void CreateCoonMesh(List<GameObject> curveParents)
+    {
+        if (curveParents == null || curveParents.Count != 4)
+        {
+            Debug.LogWarning("Exactly 4 Chaikin curves must be selected.");
+            return;
+        }
+
+        // Retrieve refined curves
+        List<List<Vector3>> boundaryCurves = new List<List<Vector3>>();
+        foreach (GameObject parent in curveParents)
+        {
+            if (!TryGetCurveByPolygon(parent, out List<Vector3> refined, out _))
+            {
+                Debug.LogWarning("One of the curves is invalid or missing.");
+                return;
+            }
+            boundaryCurves.Add(refined);
+        }
+
+        // Assign boundaries
+        List<Vector3> C0 = boundaryCurves[0]; // bottom (s: 0-1)
+        List<Vector3> C1 = boundaryCurves[1]; // right  (t: 0-1)
+        List<Vector3> C2 = boundaryCurves[2]; // top    (s: 0-1)
+        List<Vector3> C3 = boundaryCurves[3]; // left   (t: 0-1)
+
+        int resolutionU = Mathf.Min(C0.Count, C2.Count);
+        int resolutionV = Mathf.Min(C1.Count, C3.Count);
+
+        // Utility to resample a curve into N points
+        List<Vector3> Resample(List<Vector3> input, int count)
+        {
+            List<Vector3> result = new List<Vector3>();
+            for (int i = 0; i < count; i++)
+            {
+                float t = i / (float)(count - 1);
+                float floatIndex = t * (input.Count - 1);
+                int index = Mathf.FloorToInt(floatIndex);
+                float frac = floatIndex - index;
+
+                if (index >= input.Count - 1)
+                {
+                    result.Add(input[input.Count - 1]);
+                }
+                else
+                {
+                    result.Add(Vector3.Lerp(input[index], input[index + 1], frac));
+                }
+            }
+            return result;
+        }
+
+        // Resample and enforce direction:
+        List<Vector3> c0 = EnsureDirection(Resample(C0, resolutionU), desiredStart: C3[0]);
+        List<Vector3> c2 = EnsureDirection(Resample(C2, resolutionU), desiredStart: C1[C1.Count - 1]);
+        List<Vector3> c3 = EnsureDirection(Resample(C3, resolutionV), desiredStart: C0[0]);
+        List<Vector3> c1 = EnsureDirection(Resample(C1, resolutionV), desiredStart: C0[C0.Count - 1]);
+
+        Vector3[,] grid = new Vector3[resolutionU, resolutionV];
+
+        for (int u = 0; u < resolutionU; u++)
+        {
+            float s = u / (float)(resolutionU - 1);
+            for (int v = 0; v < resolutionV; v++)
+            {
+                float t = v / (float)(resolutionV - 1);
+
+                // Interpolate edges
+                Vector3 A = Vector3.Lerp(c3[v], c1[v], s); // vertical edge interpolation (left to right)
+                Vector3 B = Vector3.Lerp(c0[u], c2[u], t); // horizontal edge interpolation (bottom to top)
+
+                // Bilinear blend of corners
+                Vector3 bilinear =
+                    (1 - s) * (1 - t) * c0[0] +
+                    s * (1 - t) * c0[resolutionU - 1] +
+                    (1 - s) * t * c2[0] +
+                    s * t * c2[resolutionU - 1];
+
+                // Coons patch formula
+                Vector3 S = A + B - bilinear;
+                grid[u, v] = S;
+            }
+        }
+
+        // Flatten vertices
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+        for (int u = 0; u < resolutionU; u++)
+        {
+            for (int v = 0; v < resolutionV; v++)
+            {
+                vertices.Add(grid[u, v]);
+            }
+        }
+
+        // Build triangle indices
+        for (int u = 0; u < resolutionU - 1; u++)
+        {
+            for (int v = 0; v < resolutionV - 1; v++)
+            {
+                int i00 = u * resolutionV + v;
+                int i10 = (u + 1) * resolutionV + v;
+                int i01 = u * resolutionV + (v + 1);
+                int i11 = (u + 1) * resolutionV + (v + 1);
+
+                triangles.Add(i00); triangles.Add(i10); triangles.Add(i11);
+                triangles.Add(i00); triangles.Add(i11); triangles.Add(i01);
+            }
+        }
+
+        // Create mesh
+        GameObject meshGO = new GameObject("CoonSurface");
+        MeshFilter mf = meshGO.AddComponent<MeshFilter>();
+        MeshRenderer mr = meshGO.AddComponent<MeshRenderer>();
+        mr.material = new Material(Shader.Find("Standard"));
+
+        Mesh mesh = new Mesh();
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.RecalculateNormals();
+
+        mf.mesh = mesh;
+
+        Debug.Log("Coon surface successfully created.");
+    }
+    List<Vector3> EnsureDirection(List<Vector3> curve, Vector3 desiredStart)
+    {
+        if ((curve[0] - desiredStart).sqrMagnitude > (curve[curve.Count - 1] - desiredStart).sqrMagnitude)
+        {
+            curve.Reverse();
+        }
+        return curve;
+    }
+
+    private List<Vector3> Resample(List<Vector3> points, int targetCount)
+    {
+        List<Vector3> resampled = new List<Vector3>();
+
+        float totalLength = 0f;
+        for (int i = 0; i < points.Count - 1; i++)
+            totalLength += Vector3.Distance(points[i], points[i + 1]);
+
+        float segmentLength = totalLength / (targetCount - 1);
+        resampled.Add(points[0]);
+
+        int currentIndex = 0;
+        float distanceAccum = 0f;
+
+        for (int i = 1; i < targetCount - 1; i++)
+        {
+            float targetDist = i * segmentLength;
+
+            while (currentIndex < points.Count - 1 && distanceAccum + Vector3.Distance(points[currentIndex], points[currentIndex + 1]) < targetDist)
+            {
+                distanceAccum += Vector3.Distance(points[currentIndex], points[currentIndex + 1]);
+                currentIndex++;
+            }
+
+            float remaining = targetDist - distanceAccum;
+            Vector3 dir = (points[currentIndex + 1] - points[currentIndex]).normalized;
+            Vector3 newPoint = points[currentIndex] + dir * remaining;
+            resampled.Add(newPoint);
+        }
+
+        resampled.Add(points[points.Count - 1]);
+        return resampled;
+    }
+
 
     // Clear the curve and canvas
     public void ClearCurve()
