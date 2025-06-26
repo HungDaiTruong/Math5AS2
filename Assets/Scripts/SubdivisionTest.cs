@@ -41,6 +41,12 @@ public class SubdivisionTest : MonoBehaviour
             _geometry = _geometry.LoopSubdivision();
             meshFilter.mesh = _geometry.ToMesh();
         }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            _geometry = _geometry.KobbeltSubdivision();
+            meshFilter.mesh = _geometry.ToMesh();
+        }
     }
 
     private void Subdivide()
