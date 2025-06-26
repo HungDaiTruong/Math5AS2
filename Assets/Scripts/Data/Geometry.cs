@@ -191,42 +191,35 @@ namespace Data
 
         public Geometry CatmullClarkSubdivision()
         {
-            // Step 1: Create face points (centroids)
             Dictionary<Face, Vertex> facePoints = new Dictionary<Face, Vertex>();
             foreach (var face in Faces)
             {
                 facePoints[face] = new Vertex(face.GetCentroid());
             }
 
-            // Step 2: Create edge points
             Dictionary<Edge, Vertex> edgePoints = new Dictionary<Edge, Vertex>();
             foreach (var edge in Edges)
             {
                 if (edge.Faces.Count == 2)
                 {
-                    // Interior edge - average of endpoints and adjacent face points
                     Vector3 edgePointPos = (edge.StartPoint.Value + edge.EndPoint.Value + 
                                            facePoints[edge.Faces[0]].Value + facePoints[edge.Faces[1]].Value) / 4f;
                     edgePoints[edge] = new Vertex(edgePointPos);
                 }
                 else
                 {
-                    // Boundary edge - midpoint of endpoints
                     edgePoints[edge] = new Vertex(edge.GetMidpoint());
                 }
             }
 
-            // Step 3: Update original vertices
             Dictionary<Vertex, Vertex> updatedVertices = new Dictionary<Vertex, Vertex>();
             foreach (var vertex in Vertices)
             {
                 if (vertex.IsBoundary)
                 {
-                    // Boundary vertex handling
                     var boundaryEdges = vertex.Edges.Where(e => e.Faces.Count == 1).ToList();
                     if (boundaryEdges.Count == 2)
                     {
-                        // Smooth boundary vertex
                         Vector3 newPos = (vertex.Value * 6f + 
                                         boundaryEdges[0].GetOtherVertex(vertex).Value + 
                                         boundaryEdges[1].GetOtherVertex(vertex).Value) / 8f;
@@ -234,13 +227,11 @@ namespace Data
                     }
                     else
                     {
-                        // Corner vertex - keep original position
                         updatedVertices[vertex] = new Vertex(vertex.Value);
                     }
                 }
                 else
                 {
-                    // Interior vertex - Catmull-Clark formula
                     Vector3 faceAvg = Vector3.zero;
                     foreach (var face in vertex.Faces)
                     {
@@ -261,13 +252,10 @@ namespace Data
                 }
             }
 
-            // Step 4: Create new faces - FIXED to avoid duplicate edges
             List<Face> newFaces = new List<Face>();
             
-            // Track all edges to avoid duplicates
             Dictionary<(Vertex, Vertex), Edge> edgeMap = new Dictionary<(Vertex, Vertex), Edge>();
             
-            // Helper function to get or create edge
             Edge GetOrCreateEdge(Vertex v1, Vertex v2)
             {
                 var key1 = (v1, v2);
@@ -294,7 +282,6 @@ namespace Data
                     Vertex nextVertex = face.Vertices[(i + 1) % face.Vertices.Count];
                     Vertex prevVertex = face.Vertices[i == 0 ? face.Vertices.Count - 1 : i - 1];
                     
-                    // Find edges
                     Edge currentEdge = FindEdgeBetweenVertices(currentVertex, nextVertex);
                     Edge previousEdge = FindEdgeBetweenVertices(prevVertex, currentVertex);
 
@@ -304,7 +291,6 @@ namespace Data
                         Vertex currentEdgePoint = edgePoints[currentEdge];
                         Vertex previousEdgePoint = edgePoints[previousEdge];
 
-                        // Create quad vertices in CCW order to maintain outward normal
                         List<Vertex> quadVertices = new List<Vertex> 
                         { 
                             updatedVertex, 
@@ -313,15 +299,12 @@ namespace Data
                             previousEdgePoint 
                         };
 
-                        // Check if the quad normal matches the original face normal direction
                         Vector3 testNormal = CalculateQuadNormal(quadVertices);
                         if (Vector3.Dot(testNormal, originalNormal) < 0)
                         {
-                            // Reverse the order if normal is flipped
                             quadVertices.Reverse();
                         }
 
-                        // Create edges for the quad using the shared edge map
                         Edge edge1 = GetOrCreateEdge(quadVertices[0], quadVertices[1]);
                         Edge edge2 = GetOrCreateEdge(quadVertices[1], quadVertices[2]);
                         Edge edge3 = GetOrCreateEdge(quadVertices[2], quadVertices[3]);
@@ -357,7 +340,6 @@ namespace Data
         {
             if (vertices.Count != 4) return Vector3.zero;
             
-            // Use Newell's method for robust normal calculation
             Vector3 normal = Vector3.zero;
             
             for (int i = 0; i < vertices.Count; i++)
@@ -386,7 +368,6 @@ namespace Data
             {
                 if (face.Vertices.Count < 3) continue;
 
-                // Add all face vertices to mesh
                 List<int> faceIndices = new List<int>();
                 for (int i = 0; i < face.Vertices.Count; i++)
                 {
@@ -394,30 +375,24 @@ namespace Data
                     faceIndices.Add(vertexIndex++);
                 }
 
-                // Triangulate with correct winding order
                 if (face.Vertices.Count == 3)
                 {
-                    // Triangle - add directly (already in correct CCW order)
                     triangles.Add(faceIndices[0]);
                     triangles.Add(faceIndices[1]);
                     triangles.Add(faceIndices[2]);
                 }
                 else if (face.Vertices.Count == 4)
                 {
-                    // Quad - split into two triangles maintaining CCW order
-                    // First triangle: 0-1-2
                     triangles.Add(faceIndices[0]);
                     triangles.Add(faceIndices[1]);
                     triangles.Add(faceIndices[2]);
             
-                    // Second triangle: 0-2-3
                     triangles.Add(faceIndices[0]);
                     triangles.Add(faceIndices[2]);
                     triangles.Add(faceIndices[3]);
                 }
                 else
                 {
-                    // N-gon - fan triangulation from first vertex
                     for (int i = 1; i < face.Vertices.Count - 1; i++)
                     {
                         triangles.Add(faceIndices[0]);
