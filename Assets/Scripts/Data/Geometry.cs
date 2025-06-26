@@ -18,7 +18,6 @@ namespace Data
         public List<Edge> Edges { get; }
         public List<Face> Faces { get; }
 
-        // Fixed boundary detection - a vertex is boundary if ANY of its edges are boundary
         public bool IsBoundary => Edges.Any(e => e.Faces.Count < 2);
     }
     
@@ -82,7 +81,6 @@ namespace Data
         {
             if (Vertices.Count < 3) return Vector3.zero;
             
-            // Use Newell's method for robust normal calculation
             Vector3 normal = Vector3.zero;
             
             for (int i = 0; i < Vertices.Count; i++)
@@ -111,7 +109,6 @@ namespace Data
             Edges = new List<Edge>();
             Vertices = new List<Vertex>();
 
-            // Build unified edge list and vertex list
             var edgeSet = new HashSet<Edge>();
             var vertexSet = new HashSet<Vertex>();
 
@@ -127,6 +124,85 @@ namespace Data
 
             Edges.AddRange(edgeSet);
             Vertices.AddRange(vertexSet);
+        }
+
+        public Geometry(Mesh mesh)
+        {
+            Vector3[] meshVertices = mesh.vertices;
+            int[] triangles = mesh.triangles;
+    
+            // Merge vertices that are at the same position (with small tolerance)
+            const float tolerance = 1e-6f;
+            Dictionary<int, int> vertexRemap = new Dictionary<int, int>();
+            List<Vector3> uniquePositions = new List<Vector3>();
+            
+            for (int i = 0; i < meshVertices.Length; i++)
+            {
+                int existingIndex = -1;
+                for (int j = 0; j < uniquePositions.Count; j++)
+                {
+                    if (Vector3.Distance(meshVertices[i], uniquePositions[j]) < tolerance)
+                    {
+                        existingIndex = j;
+                        break;
+                    }
+                }
+                
+                if (existingIndex >= 0)
+                {
+                    vertexRemap[i] = existingIndex;
+                }
+                else
+                {
+                    vertexRemap[i] = uniquePositions.Count;
+                    uniquePositions.Add(meshVertices[i]);
+                }
+            }
+    
+            // Create vertex objects for unique positions only
+            Vertices = new List<Vertex>();
+            for (int i = 0; i < uniquePositions.Count; i++)
+            {
+                Vertices.Add(new Vertex(uniquePositions[i]));
+            }
+    
+            // Track edges to avoid duplicates
+            Dictionary<(int, int), Edge> edgeDict = new Dictionary<(int, int), Edge>();
+    
+            Edge GetOrCreateEdge(int v1Index, int v2Index)
+            {
+                var key = v1Index < v2Index ? (v1Index, v2Index) : (v2Index, v1Index);
+        
+                if (!edgeDict.ContainsKey(key))
+                {
+                    edgeDict[key] = new Edge(Vertices[v1Index], Vertices[v2Index]);
+                }
+        
+                return edgeDict[key];
+            }
+    
+            // Create faces from triangles using remapped indices
+            Faces = new List<Face>();
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                int v0 = vertexRemap[triangles[i]];
+                int v1 = vertexRemap[triangles[i + 1]];
+                int v2 = vertexRemap[triangles[i + 2]];
+        
+                // Skip degenerate triangles
+                if (v0 == v1 || v1 == v2 || v2 == v0) continue;
+        
+                Edge edge0 = GetOrCreateEdge(v0, v1);
+                Edge edge1 = GetOrCreateEdge(v1, v2);
+                Edge edge2 = GetOrCreateEdge(v2, v0);
+        
+                List<Edge> faceEdges = new List<Edge> { edge0, edge1, edge2 };
+                List<Vertex> faceVertices = new List<Vertex> { Vertices[v0], Vertices[v1], Vertices[v2] };
+        
+                Faces.Add(new Face(faceEdges, faceVertices));
+            }
+    
+            Edges = new List<Edge>(edgeDict.Values);
         }
 
         public static Geometry GetCube()
@@ -161,32 +237,184 @@ namespace Data
 
             List<Face> faces = new List<Face>()
             {
-                // Bottom face (y = -0.5, normal pointing down: 0, -1, 0)
                 new Face(new List<Edge> { edges[3], edges[2], edges[1], edges[0] }, 
                     new List<Vertex> { vertices[0], vertices[3], vertices[2], vertices[1] }),
-                
-                // Top face (y = 0.5, normal pointing up: 0, 1, 0)
                 new Face(new List<Edge> { edges[4], edges[5], edges[6], edges[7] }, 
                     new List<Vertex> { vertices[4], vertices[5], vertices[6], vertices[7] }),
-                
-                // Front face (z = -0.5, normal pointing forward: 0, 0, -1)
                 new Face(new List<Edge> { edges[0], edges[9], edges[4], edges[8] }, 
                     new List<Vertex> { vertices[0], vertices[1], vertices[5], vertices[4] }),
-                
-                // Right face (x = 0.5, normal pointing right: 1, 0, 0)
                 new Face(new List<Edge> { edges[1], edges[10], edges[5], edges[9] }, 
                     new List<Vertex> { vertices[1], vertices[2], vertices[6], vertices[5] }),
-                
-                // Back face (z = 0.5, normal pointing back: 0, 0, 1)
                 new Face(new List<Edge> { edges[2], edges[11], edges[6], edges[10] }, 
                     new List<Vertex> { vertices[2], vertices[3], vertices[7], vertices[6] }),
-                
-                // Left face (x = -0.5, normal pointing left: -1, 0, 0)
                 new Face(new List<Edge> { edges[3], edges[8], edges[7], edges[11] }, 
                     new List<Vertex> { vertices[3], vertices[0], vertices[4], vertices[7] })
             };
 
             return new Geometry(faces);
+        }
+        
+        public Geometry LoopSubdivision()
+        {
+            // Loop subdivision only works on triangle meshes
+            if (Faces.Any(f => f.Vertices.Count != 3))
+            {
+                throw new InvalidOperationException("Loop subdivision only works on triangle meshes");
+            }
+
+            // Step 1: Compute new edge points
+            Dictionary<Edge, Vertex> edgePoints = new Dictionary<Edge, Vertex>();
+            foreach (var edge in Edges)
+            {
+                Vector3 newEdgePoint;
+                
+                if (edge.Faces.Count == 2)
+                {
+                    // Interior edge: e = 3/8 * (v1 + v2) + 1/8 * (vleft + vright)
+                    var v1 = edge.StartPoint.Value;
+                    var v2 = edge.EndPoint.Value;
+                    
+                    // Find the other two vertices (vleft and vright)
+                    var face1 = edge.Faces[0];
+                    var face2 = edge.Faces[1];
+                    
+                    var vleft = GetThirdVertex(face1, edge.StartPoint, edge.EndPoint);
+                    var vright = GetThirdVertex(face2, edge.StartPoint, edge.EndPoint);
+                    
+                    newEdgePoint = (3f/8f) * (v1 + v2) + (1f/8f) * (vleft + vright);
+                }
+                else
+                {
+                    // Boundary edge: simple midpoint
+                    newEdgePoint = edge.GetMidpoint();
+                }
+                
+                edgePoints[edge] = new Vertex(newEdgePoint);
+            }
+
+            // Step 2: Compute new vertex points
+            Dictionary<Vertex, Vertex> newVertexPoints = new Dictionary<Vertex, Vertex>();
+            foreach (var vertex in Vertices)
+            {
+                Vector3 newVertexPoint;
+                
+                if (vertex.IsBoundary)
+                {
+                    // Boundary vertex: v' = 3/4 * v + 1/8 * (neighbor1 + neighbor2)
+                    var boundaryEdges = vertex.Edges.Where(e => e.Faces.Count == 1).ToList();
+                    if (boundaryEdges.Count == 2)
+                    {
+                        var neighbor1 = boundaryEdges[0].GetOtherVertex(vertex).Value;
+                        var neighbor2 = boundaryEdges[1].GetOtherVertex(vertex).Value;
+                        newVertexPoint = (3f/4f) * vertex.Value + (1f/8f) * (neighbor1 + neighbor2);
+                    }
+                    else
+                    {
+                        newVertexPoint = vertex.Value; // Keep unchanged for complex boundary cases
+                    }
+                }
+                else
+                {
+                    // Interior vertex: v' = (1-nα) * v + α * Σ(adjacent vertices)
+                    int n = vertex.Edges.Count;
+                    float alpha;
+                    
+                    if (n == 3)
+                    {
+                        alpha = 3f/16f;
+                    }
+                    else
+                    {
+                        // α = (1/n) * [5/8 - (3/8 + 1/4 * cos(2π/n))²]
+                        float cosValue = Mathf.Cos(2f * Mathf.PI / n);
+                        float temp = 3f/8f + (1f/4f) * cosValue;
+                        alpha = (1f/n) * (5f/8f - temp * temp);
+                    }
+                    
+                    Vector3 neighborSum = Vector3.zero;
+                    foreach (var edge in vertex.Edges)
+                    {
+                        neighborSum += edge.GetOtherVertex(vertex).Value;
+                    }
+                    
+                    newVertexPoint = (1f - n * alpha) * vertex.Value + alpha * neighborSum;
+                }
+                
+                newVertexPoints[vertex] = new Vertex(newVertexPoint);
+            }
+
+            // Step 3: Create new faces (1-to-4 subdivision)
+            List<Face> newFaces = new List<Face>();
+            Dictionary<(Vertex, Vertex), Edge> edgeMap = new Dictionary<(Vertex, Vertex), Edge>();
+            
+            Edge GetOrCreateEdge(Vertex v1, Vertex v2)
+            {
+                var key1 = (v1, v2);
+                var key2 = (v2, v1);
+                
+                if (edgeMap.ContainsKey(key1))
+                    return edgeMap[key1];
+                if (edgeMap.ContainsKey(key2))
+                    return edgeMap[key2];
+                
+                var newEdge = new Edge(v1, v2);
+                edgeMap[key1] = newEdge;
+                return newEdge;
+            }
+
+            foreach (var face in Faces)
+            {
+                // Get the three original vertices and their new positions
+                var v0 = newVertexPoints[face.Vertices[0]];
+                var v1 = newVertexPoints[face.Vertices[1]];
+                var v2 = newVertexPoints[face.Vertices[2]];
+                
+                // Get the three edge points - find edges in correct order
+                var e01 = edgePoints[FindEdgeBetweenVertices(face.Vertices[0], face.Vertices[1])];
+                var e12 = edgePoints[FindEdgeBetweenVertices(face.Vertices[1], face.Vertices[2])];
+                var e20 = edgePoints[FindEdgeBetweenVertices(face.Vertices[2], face.Vertices[0])];
+                
+                // Create 4 new triangles with consistent winding order
+                
+                // Corner triangle 1: v0, e01, e20
+                CreateTriangleFace(newFaces, edgeMap, GetOrCreateEdge, v0, e01, e20);
+                
+                // Corner triangle 2: v1, e12, e01
+                CreateTriangleFace(newFaces, edgeMap, GetOrCreateEdge, v1, e12, e01);
+                
+                // Corner triangle 3: v2, e20, e12  
+                CreateTriangleFace(newFaces, edgeMap, GetOrCreateEdge, v2, e20, e12);
+                
+                // Center triangle: e01, e12, e20
+                CreateTriangleFace(newFaces, edgeMap, GetOrCreateEdge, e01, e12, e20);
+            }
+
+            return new Geometry(newFaces);
+        }
+
+        private void CreateTriangleFace(List<Face> newFaces, Dictionary<(Vertex, Vertex), Edge> edgeMap, 
+            Func<Vertex, Vertex, Edge> getOrCreateEdge, Vertex v1, Vertex v2, Vertex v3)
+        {
+            var edge1 = getOrCreateEdge(v1, v2);
+            var edge2 = getOrCreateEdge(v2, v3);
+            var edge3 = getOrCreateEdge(v3, v1);
+            
+            newFaces.Add(new Face(
+                new List<Edge> { edge1, edge2, edge3 },
+                new List<Vertex> { v1, v2, v3 }
+            ));
+        }
+
+        private Vector3 GetThirdVertex(Face face, Vertex v1, Vertex v2)
+        {
+            foreach (var vertex in face.Vertices)
+            {
+                if (vertex != v1 && vertex != v2)
+                {
+                    return vertex.Value;
+                }
+            }
+            throw new ArgumentException("Could not find third vertex in triangle");
         }
 
         public Geometry CatmullClarkSubdivision()
@@ -253,7 +481,6 @@ namespace Data
             }
 
             List<Face> newFaces = new List<Face>();
-            
             Dictionary<(Vertex, Vertex), Edge> edgeMap = new Dictionary<(Vertex, Vertex), Edge>();
             
             Edge GetOrCreateEdge(Vertex v1, Vertex v2)

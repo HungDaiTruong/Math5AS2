@@ -13,9 +13,17 @@ public class SubdivisionTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _geometry = Geometry.GetCube();
-        var mesh = _geometry.ToMesh();
-        meshFilter.mesh = mesh;
+        if (meshFilter.mesh == null)
+        {
+            _geometry = Geometry.GetCube();
+            var mesh = _geometry.ToMesh();
+            meshFilter.mesh = mesh;
+        }
+        else
+        {
+            _geometry = new Geometry(meshFilter.mesh);
+        }
+        
         meshRenderer.material = new Material(Shader.Find("Standard"));
     }
 
@@ -24,13 +32,19 @@ public class SubdivisionTest : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Subdivide();
+            _geometry = _geometry.CatmullClarkSubdivision();
+            meshFilter.mesh = _geometry.ToMesh();
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            _geometry = _geometry.LoopSubdivision();
+            meshFilter.mesh = _geometry.ToMesh();
         }
     }
 
     private void Subdivide()
     {
-        _geometry = _geometry.CatmullClarkSubdivision();
-        meshFilter.mesh = _geometry.ToMesh();
+        
     }
 }
