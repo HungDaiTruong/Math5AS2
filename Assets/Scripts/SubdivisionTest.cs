@@ -13,7 +13,7 @@ public class SubdivisionTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (meshFilter.mesh == null)
+        if (meshFilter.mesh.vertexCount == 0)
         {
             _geometry = Geometry.GetCube();
             var mesh = _geometry.ToMesh();
