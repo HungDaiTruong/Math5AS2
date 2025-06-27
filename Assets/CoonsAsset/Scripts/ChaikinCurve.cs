@@ -153,10 +153,10 @@ public class ChaikinCurve : MonoBehaviour
                 Vector3 p1 = currentPoints[i + 1];
 
                 // Q is 25% from p0 toward p1
-                Vector3 Q = Vector3.Lerp(p0, p1, 0.25f);
+                Vector3 Q = 0.75f * p0 + 0.25f * p1;
 
                 // R is 75% from p0 toward p1 (or 25% from p1 toward p0)
-                Vector3 R = Vector3.Lerp(p0, p1, 0.75f);
+                Vector3 R = 0.25f * p0 + 0.75f * p1;
 
                 // These two new points replace the original edge
                 newPoints.Add(Q);
@@ -239,7 +239,7 @@ public class ChaikinCurve : MonoBehaviour
                 }
                 else
                 {
-                    result.Add(Vector3.Lerp(input[index], input[index + 1], frac));
+                    result.Add((1 - frac) * input[index] + frac * input[index + 1]);
                 }
             }
             return result;
@@ -261,8 +261,8 @@ public class ChaikinCurve : MonoBehaviour
                 float t = v / (float)(resolutionV - 1);
 
                 // Interpolate edges
-                Vector3 A = Vector3.Lerp(c3[v], c1[v], s); // vertical edge interpolation (left to right)
-                Vector3 B = Vector3.Lerp(c0[u], c2[u], t); // horizontal edge interpolation (bottom to top)
+                Vector3 A = (1 - s) * c3[v] + s * c1[v]; // vertical edge interpolation, left to right
+                Vector3 B = (1 - t) * c0[u] + t * c2[u]; // horizontal edge interpolation, bottom to top
 
                 // Bilinear blend of corners
                 Vector3 bilinear =
