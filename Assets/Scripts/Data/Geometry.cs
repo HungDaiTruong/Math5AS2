@@ -479,7 +479,7 @@ namespace Data
                 updatedVertices[vertex] = new Vertex(newVertexPoint);
             }
 
-            // Step 3: Create new triangular faces
+            // Step 3: Create new triangular faces - one for each original triangle
             // Each original triangle is replaced by 3 triangles connecting the face point to the updated vertices
             List<Face> newFaces = new List<Face>();
             Dictionary<(Vertex, Vertex), Edge> edgeMap = new Dictionary<(Vertex, Vertex), Edge>();
@@ -499,6 +499,16 @@ namespace Data
                 return newEdge;
             }
 
+            // Store original edge information before creating new faces
+            Dictionary<(Vertex, Vertex), bool> originalEdges = new Dictionary<(Vertex, Vertex), bool>();
+            foreach (var edge in Edges)
+            {
+                var v1 = updatedVertices[edge.StartPoint];
+                var v2 = updatedVertices[edge.EndPoint];
+                originalEdges[(v1, v2)] = true;
+                originalEdges[(v2, v1)] = true;
+            }
+
             foreach (var face in Faces)
             {
                 Vertex facePoint = facePoints[face];
@@ -515,36 +525,40 @@ namespace Data
             }
 
             // Step 4: Edge flipping phase
-            // In √3-subdivision, we need to flip edges that connect original vertices
-            // This is what gives the √3 pattern its characteristic regular structure
-
-            // Collect edges that connect updated original vertices (not face points)
+            // Collect edges that connect updated original vertices and need to be flipped
             List<Edge> edgesToFlip = new List<Edge>();
-            foreach (var edge in edgeMap.Values)
+            foreach (var kvp in edgeMap)
             {
-                // Check if both endpoints are updated original vertices (not face points)
-                bool isOriginalEdge = updatedVertices.ContainsValue(edge.StartPoint) &&
-                                     updatedVertices.ContainsValue(edge.EndPoint);
+                var edge = kvp.Value;
+                var key = kvp.Key;
 
-                if (isOriginalEdge && edge.Faces.Count == 2)
+                // Check if this edge connects two original vertices (not face points)
+                bool connectsOriginalVertices = originalEdges.ContainsKey(key);
+
+                if (connectsOriginalVertices && edge.Faces.Count == 2)
                 {
-                    edgesToFlip.Add(edge);
+                    // Only flip if both adjacent faces contain a face point
+                    bool hasFacePoints = edge.Faces.All(f => f.Vertices.Any(v => facePoints.ContainsValue(v)));
+                    if (hasFacePoints)
+                    {
+                        edgesToFlip.Add(edge);
+                    }
                 }
             }
 
-            // Perform edge flipping
+            // Perform edge flipping with proper cleanup
             foreach (var edge in edgesToFlip)
             {
                 if (edge.Faces.Count == 2)
                 {
-                    FlipEdge(edge, newFaces, edgeMap);
+                    FlipEdgeProper(edge, newFaces, edgeMap);
                 }
             }
 
             return new Geometry(newFaces);
         }
 
-        private void FlipEdge(Edge edge, List<Face> faces, Dictionary<(Vertex, Vertex), Edge> edgeMap)
+        private void FlipEdgeProper(Edge edge, List<Face> faces, Dictionary<(Vertex, Vertex), Edge> edgeMap)
         {
             if (edge.Faces.Count != 2) return;
 
@@ -574,51 +588,48 @@ namespace Data
 
             if (opposite1 == null || opposite2 == null) return;
 
-            // Remove the old faces
+            // Remove the old faces from the list
             faces.Remove(face1);
             faces.Remove(face2);
 
-            // Remove the old edge from the edge map
-            var key1 = (edge.StartPoint, edge.EndPoint);
-            var key2 = (edge.EndPoint, edge.StartPoint);
-            edgeMap.Remove(key1);
-            edgeMap.Remove(key2);
+            // Clear the face references from the old edge
+            edge.Faces.Clear();
 
-            // Create new edge connecting the opposite vertices
-            var newEdge = new Edge(opposite1, opposite2);
-            var newKey = (opposite1, opposite2);
-            edgeMap[newKey] = newEdge;
+            // Remove all edges of the old faces from vertex edge lists and edge map
+            CleanupFaceEdges(face1, edgeMap);
+            CleanupFaceEdges(face2, edgeMap);
 
-            // Create two new triangular faces
-            Edge GetOrCreateEdge(Vertex v1, Vertex v2)
+            // Helper function to get or create edge with proper cleanup
+            Edge GetOrCreateEdgeClean(Vertex v1, Vertex v2)
             {
-                var k1 = (v1, v2);
-                var k2 = (v2, v1);
+                var key1 = (v1, v2);
+                var key2 = (v2, v1);
 
-                if (edgeMap.ContainsKey(k1))
-                    return edgeMap[k1];
-                if (edgeMap.ContainsKey(k2))
-                    return edgeMap[k2];
+                if (edgeMap.ContainsKey(key1))
+                    return edgeMap[key1];
+                if (edgeMap.ContainsKey(key2))
+                    return edgeMap[key2];
 
-                var e = new Edge(v1, v2);
-                edgeMap[k1] = e;
-                return e;
+                var newEdge = new Edge(v1, v2);
+                edgeMap[key1] = newEdge;
+                return newEdge;
             }
 
+            // Create two new triangular faces with the flipped edge
             // Triangle 1: opposite1, edge.StartPoint, opposite2
-            var e1 = GetOrCreateEdge(opposite1, edge.StartPoint);
-            var e2 = GetOrCreateEdge(edge.StartPoint, opposite2);
-            var e3 = newEdge;
+            var e1 = GetOrCreateEdgeClean(opposite1, edge.StartPoint);
+            var e2 = GetOrCreateEdgeClean(edge.StartPoint, opposite2);
+            var e3 = GetOrCreateEdgeClean(opposite2, opposite1);
 
             var newFace1 = new Face(
                 new List<Edge> { e1, e2, e3 },
                 new List<Vertex> { opposite1, edge.StartPoint, opposite2 }
             );
 
-            // Triangle 2: opposite1, opposite2, edge.EndPoint
-            var e4 = newEdge;
-            var e5 = GetOrCreateEdge(opposite2, edge.EndPoint);
-            var e6 = GetOrCreateEdge(edge.EndPoint, opposite1);
+            // Triangle 2: opposite1, opposite2, edge.EndPoint  
+            var e4 = GetOrCreateEdgeClean(opposite1, opposite2);
+            var e5 = GetOrCreateEdgeClean(opposite2, edge.EndPoint);
+            var e6 = GetOrCreateEdgeClean(edge.EndPoint, opposite1);
 
             var newFace2 = new Face(
                 new List<Edge> { e4, e5, e6 },
@@ -627,6 +638,34 @@ namespace Data
 
             faces.Add(newFace1);
             faces.Add(newFace2);
+        }
+
+        private void CleanupFaceEdges(Face face, Dictionary<(Vertex, Vertex), Edge> edgeMap)
+        {
+            foreach (var edge in face.Edges)
+            {
+                // Remove this face from the edge's face list
+                edge.Faces.Remove(face);
+
+                // If the edge has no more faces, remove it from vertices and edge map
+                if (edge.Faces.Count == 0)
+                {
+                    edge.StartPoint.Edges.Remove(edge);
+                    edge.EndPoint.Edges.Remove(edge);
+
+                    // Remove from edge map
+                    var key1 = (edge.StartPoint, edge.EndPoint);
+                    var key2 = (edge.EndPoint, edge.StartPoint);
+                    edgeMap.Remove(key1);
+                    edgeMap.Remove(key2);
+                }
+            }
+
+            // Clear vertex face references
+            foreach (var vertex in face.Vertices)
+            {
+                vertex.Faces.Remove(face);
+            }
         }
 
         public Geometry CatmullClarkSubdivision()

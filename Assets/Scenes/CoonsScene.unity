@@ -2989,9 +2989,9 @@ RectTransform:
   - {fileID: 703313672}
   m_Father: {fileID: 2140971554}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 25, y: -75}
   m_SizeDelta: {x: 50, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &511964017
@@ -3065,9 +3065,9 @@ RectTransform:
   - {fileID: 970935185}
   m_Father: {fileID: 2140971554}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 25, y: -28.333334}
   m_SizeDelta: {x: 50, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &523110955
@@ -3990,9 +3990,9 @@ RectTransform:
   - {fileID: 1043503299}
   m_Father: {fileID: 2140971554}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 25, y: -121.66667}
   m_SizeDelta: {x: 50, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &836960153
@@ -6724,6 +6724,7 @@ MonoBehaviour:
   isConnectingCurves: 0
   isConnectingCurvePoints: 0
   coonSelectedCurves: []
+  isSelectingCoonCurves: 0
   axisPosition: {x: 0, y: 0, z: 0}
   decasteljauScript: {fileID: 1483318581}
   chaikinScript: {fileID: 1483318582}
@@ -8764,7 +8765,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2140971554
 RectTransform:
   m_ObjectHideFlags: 0
